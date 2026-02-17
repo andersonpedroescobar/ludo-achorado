@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ludo Achorado v2</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+   <!-- PANTALLA DE INICIO (MODAL) -->
+    <div id="start-screen" class="modal-overlay">
+        <div class="modal-content">
+            <h1>🎲 LUDO ACHORADO 🎲</h1>
+            <p>Selecciona la cantidad de jugadores:</p>
+            <div class="player-buttons">
+                <button onclick="iniciarJuego(2)">2 Jugadores</button>
+                <button onclick="iniciarJuego(3)">3 Jugadores</button>
+                <button onclick="iniciarJuego(4)">4 Jugadores</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 👇 (NUEVO MODAL CHIKAWA) 👇 -->
+    <div id="chikawa-modal" class="chikawa-overlay" style="display: none;">
+        <div class="chikawa-content">
+            <img src="img/chikawa1.png" alt="¡Salió 6!" class="chikawa-anim">
+            <h2>¡HA SALIDO UN 6!</h2>
+            <p>¡Repites turno o sacas ficha!</p>
+        </div>
+    </div>
+    
+
+    <div class="main-container">
+        
+        <!-- AQUÍ ESTABA EL ERROR: Faltaba este div "board-area" -->
+        <div class="board-area">
+            <div class="board-wrapper">
+                <!-- Imagen de fondo -->
+                <img src="img/ludo.jpg" alt="Tablero Ludo" class="board-img">
+                
+                <!-- GRILLA DEL SISTEMA (Para fichas) -->
+                <!-- Esta clase "grid-system" es vital para que las fichas sean pequeñas -->
+                <div id="tokens-container" class="grid-system"></div>
+
+                <!-- Capa para ver los cuadros amarillos (DEBUG) -->
+                <div id="grid-layer" class="grid-system grid-debug"></div>
+            </div>
+        </div>
+
+        <!-- SECCIÓN DE CONTROLES -->
+        <div class="controls-area">
+            
+            <!-- CABECERA CON BOTÓN INFO -->
+            <div class="controls-header">
+                <h2 id="turn-indicator">Turno: ...</h2>
+                <button class="btn-info" onclick="toggleRules()">ℹ</button>
+            </div>
+
+            <!-- MODAL DE REGLAS (OCULTO POR DEFECTO) -->
+            <div id="rules-modal" class="rules-modal" style="display: none;">
+                <h3>📜 Reglas del Slot</h3>
+                <ul>
+                    <li>dos <b>1</b> = +1 paso</li>
+                    <li>dos <b>2</b> = +2 pasos</li>
+                    <li>tres <b>1</b> = +2 pasos</li>
+                    <li>tres <b>2</b> = +4 pasos</li>
+                    <li>tres <b>7</b> = +7 pasos</li>
+                    <li>Dado <b>6</b> = ¡Repite turno!</li>
+                    <li><b>Sacar ficha:</b> Solo con Dado 6</li>
+                </ul>
+                <button onclick="toggleRules()" class="btn-close-rules">Cerrar</button>
+            </div>
+            
+            <!-- SLOT -->
+            <div class="slot-machine-container" id="main-btn" onclick="accionPrincipal()">
+                <img src="img/chikawa_slots.png" alt="Slot" class="slot-img">
+                <div class="slot-display">
+                    <span id="reel1">-</span>
+                    <span id="reel2">-</span>
+                    <span id="reel3">-</span>
+                </div>
+                <div id="btn-text" style="color:gold; font-weight:bold; margin-top:5px;">GIRAR SLOT</div>
+            </div>
+
+            <div id="math-result" class="math-display">
+                Slot + Dado = Total
+            </div>
+            
+            <p id="game-msg">¡Haz clic para empezar!</p>
+            
+            <div class="dice-area">
+                <img src="img/dado1.jpg" id="dice-img" alt="Dado">
+            </div>
+        </div>
+    </div>
+    
+
+    <script type="module">
+      // Importar las funciones que necesitas
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+      import { getDatabase, ref, set, onValue, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+      // Tu configuración (ASEGÚRATE DE COPIAR EL QUE TE DIO FIREBASE)
+      const firebaseConfig = {
+        apiKey: "TU_API_KEY_REAL",
+        authDomain: "ludoachorado.firebaseapp.com",
+        databaseURL: "https://ludoachorado-default-rtdb.firebaseio.com",
+        projectId: "ludoachorado",
+        storageBucket: "ludoachorado.appspot.com",
+        messagingSenderId: "TU_SENDER_ID",
+        appId: "TU_APP_ID"
+      };
+
+      // Inicializar Firebase
+      const app = initializeApp(firebaseConfig);
+      const db = getDatabase(app);
+
+      // HACER LA BASE DE DATOS GLOBAL PARA USARLA EN SCRIPT.JS
+      window.db = db;
+      window.ref = ref;
+      window.set = set;
+      window.onValue = onValue;
+      window.update = update;
+      
+      console.log("🔥 Base de datos conectada");
+    </script>
+
+
+    <script src="js/script.js"></script>
+</body>
+</html>

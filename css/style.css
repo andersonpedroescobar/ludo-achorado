@@ -1,0 +1,285 @@
+body {
+    font-family: 'Segoe UI', sans-serif;
+    background-color: #2c3e50;
+    color: white;
+    margin: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    overflow: hidden;
+}
+
+/* MODAL DE INICIO (SELECCIÓN DE JUGADORES) */
+.modal-overlay {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.95);
+    z-index: 2000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.modal-content {
+    background: #fff; color: #333;
+    padding: 40px; border-radius: 15px; text-align: center;
+    box-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
+}
+.player-buttons button {
+    padding: 15px 30px; margin: 10px; cursor: pointer;
+    background: #e74c3c; color: white; border: none; font-size: 1.2rem;
+    border-radius: 8px; transition: 0.2s; font-weight: bold;
+}
+.player-buttons button:hover { background: #c0392b; transform: scale(1.05); }
+
+/* CONTENEDOR PRINCIPAL */
+.main-container {
+    display: flex;
+    gap: 30px;
+    align-items: flex-start;
+}
+
+/* --- TABLERO --- */
+.board-area {
+    width: 650px; 
+    height: 650px;
+    min-width: 600px;
+    position: relative;
+    box-shadow: 0 0 20px rgba(0,0,0,0.5);
+    border-radius: 4px;
+    overflow: hidden;
+    background: #000;
+}
+
+.board-wrapper {
+    width: 100%;
+    height: 100%;
+    position: relative;
+}
+
+.board-img {
+    width: 100%;
+    height: 100%;
+    object-fit: fill;
+    position: absolute; top: 0; left: 0;
+    z-index: 0;
+}
+
+/* --- CAPAS DE GRILLA --- */
+.grid-system {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    display: grid;
+    grid-template-columns: repeat(15, 1fr);
+    grid-template-rows: repeat(15, 1fr);
+}
+
+.grid-debug { z-index: 10; pointer-events: none; }
+
+#tokens-container { 
+    z-index: 20; 
+    pointer-events: none; 
+}
+
+/* --- FICHAS --- */
+.token {
+    /* AJUSTE: Más pequeñas para que se vean bien las 4 */
+    width: 60%; 
+    height: 60%;
+    border-radius: 50%;
+    border: 2px solid white;
+    box-shadow: 2px 2px 4px rgba(0,0,0,0.6);
+    
+    justify-self: center;
+    align-self: center;
+    
+    position: relative;
+    transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+    
+    pointer-events: auto;
+    cursor: not-allowed;
+    opacity: 0.9;
+}
+
+/* Estado seleccionable */
+.token.selectable {
+    cursor: pointer;
+    border-color: #f1c40f;
+    box-shadow: 0 0 15px #f1c40f;
+    opacity: 1;
+    z-index: 100;
+    animation: bounce 1s infinite;
+}
+
+@keyframes bounce {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.2); }
+}
+
+/* Colores */
+.token.red { background: radial-gradient(circle at 30% 30%, #e74c3c, #922b21); }
+.token.green { background: radial-gradient(circle at 30% 30%, #2ecc71, #1e8449); }
+.token.yellow { background: radial-gradient(circle at 30% 30%, #f1c40f, #b7950b); }
+.token.blue { background: radial-gradient(circle at 30% 30%, #3498db, #21618c); }
+
+/* --- CONTROLES (Derecha) --- */
+.controls-area {
+    width: 320px;
+    background: #34495e;
+    padding: 25px;
+    border-radius: 15px;
+    text-align: center;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    border: 2px solid #455a64;
+    position: relative; /* Para posicionar el modal */
+}
+
+/* CABECERA CON BOTÓN INFO */
+.controls-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid rgba(255,255,255,0.1);
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+}
+
+#turn-indicator { 
+    margin: 0;
+    font-size: 1.5rem; 
+    text-transform: uppercase;
+    color: #f39c12;
+}
+
+/* BOTÓN INFO */
+.btn-info {
+    background: #3498db; color: white;
+    border: none; width: 30px; height: 30px;
+    border-radius: 50%; cursor: pointer;
+    font-weight: bold; font-size: 1.2rem;
+    display: flex; align-items: center; justify-content: center;
+}
+.btn-info:hover { background: #2980b9; }
+
+/* MODAL DE REGLAS FLOTANTE */
+.rules-modal {
+    position: absolute;
+    top: 70px; right: 20px;
+    width: 220px;
+    background: rgba(0,0,0,0.95);
+    border: 2px solid #f1c40f;
+    border-radius: 10px;
+    padding: 15px;
+    z-index: 500;
+    text-align: left;
+    font-size: 0.85rem;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+}
+.rules-modal h3 { color: #f1c40f; margin-top: 0; text-align: center; border-bottom: 1px solid #555; padding-bottom: 5px;}
+.rules-modal ul { padding-left: 20px; margin-bottom: 15px; color: #ddd; }
+.rules-modal li { margin-bottom: 5px; }
+
+.btn-close-rules {
+    width: 100%; background: #c0392b; border: none; color: white;
+    padding: 8px; cursor: pointer; border-radius: 5px; font-weight: bold;
+}
+.btn-close-rules:hover { background: #a93226; }
+
+/* SLOT */
+.slot-machine-container {
+    cursor: pointer;
+    background: rgba(0,0,0,0.2);
+    padding: 10px;
+    border-radius: 10px;
+    margin-bottom: 15px;
+    transition: transform 0.1s;
+}
+.slot-machine-container:active { transform: scale(0.98); }
+.slot-machine-container:hover .slot-img { filter: drop-shadow(0 0 15px #f1c40f); }
+.slot-img { width: 100%; max-width: 140px; }
+
+.slot-display {
+    background: #000; color: #2ecc71;
+    font-family: 'Courier New', monospace; font-weight: bold; font-size: 1.8rem;
+    display: flex; justify-content: space-around;
+    padding: 8px; margin-top: 5px; border-radius: 5px;
+    border: 2px solid #555;
+}
+
+/* DADO */
+.dice-area {
+    background: white;
+    color: #333;
+    padding: 10px;
+    border-radius: 10px;
+    margin-top: 20px;
+}
+
+#dice-img { width: 80px; border-radius: 10px; }
+
+.rolling { animation: shake 0.5s infinite; }
+@keyframes shake {
+    0% { transform: translate(1px, 1px) rotate(0deg); }
+    50% { transform: translate(-1px, 2px) rotate(180deg); }
+    100% { transform: translate(1px, -1px) rotate(360deg); }
+}
+
+.math-display {
+    font-size: 1.1rem;
+    margin-top: 10px;
+    font-weight: bold;
+    color: #ecf0f1;
+    background: rgba(255,255,255,0.1);
+    padding: 10px;
+    border-radius: 8px;
+}
+
+/* Debug */
+.debug-cell {
+    border: 1px solid rgba(255, 255, 0, 0.1);
+    font-size: 8px; color: yellow;
+    display: flex; justify-content: center; align-items: center;
+}
+
+/* --- MODAL CHIKAWA (Salió 6) --- */
+.chikawa-overlay {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.8); /* Fondo oscuro */
+    z-index: 3000; /* Encima de todo */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    animation: fadeIn 0.3s;
+}
+
+.chikawa-content {
+    text-align: center;
+    color: white;
+    /* Efecto de explosión suave */
+    animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.chikawa-anim {
+    width: 250px;
+    filter: drop-shadow(0 0 20px gold);
+}
+
+.chikawa-content h2 {
+    font-size: 3rem;
+    color: #f1c40f;
+    margin: 10px 0;
+    text-shadow: 2px 2px 0 #000;
+}
+
+@keyframes popIn {
+    0% { transform: scale(0); opacity: 0; }
+    80% { transform: scale(1.1); opacity: 1; }
+    100% { transform: scale(1); }
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
