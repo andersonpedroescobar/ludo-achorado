@@ -136,6 +136,12 @@ if (window.onValue) {
         const data = snapshot.val();
         if (!data) return;
 
+        // 🔥 NUEVO: Si alguien tiró el dado, actualizar la imagen del dado para todos
+    if (data.ultimoValorDado) {
+        document.getElementById('dice-img').src = `img/dado${data.ultimoValorDado}.jpg`;
+        document.getElementById('game-msg').innerText = "Salió un: " + data.ultimoValorDado;
+    }
+
         // A. Si el juego no ha arrancado en mi pantalla pero ya hay datos en la nube
         if (gameState.jugadores.length === 0 && data.totalJugadores) {
             console.log("🔥 Detectada partida en curso. Iniciando tablero...");
@@ -281,6 +287,15 @@ function calcularResultados(incluirSlot) {
     const dado = Math.floor(Math.random() * 6) + 1;
     document.getElementById('dice-img').src = `img/dado${dado}.jpg`;
     gameState.ultimoValorDado = dado;
+
+    // 🔥 ESTO ES LO NUEVO: Avisar a Firebase del resultado
+    if (window.update) {
+        window.update(window.ref(window.db, 'partida/'), {
+            ultimoValorDado: dado,
+            pasosPendientes: total,
+            fase: 'SELECCIONANDO' // Esto le dirá a la pantalla de tu amigo que ya puede elegir ficha
+        });
+    }
 
     // --- AQUÍ ACTIVAMOS CHIKAWA SI SALE 6 ---
     if (dado === 6) {
