@@ -86,155 +86,133 @@ const rutaAzul = [
     {c: 8, r: 15}, {c: 8, r: 14}, {c: 8, r: 13}, {c: 8, r: 12}, {c: 8, r: 11}, {c: 8, r: 10}, {c: 8, r: 9}
 ];
 
-// --- INICIALIZACIÓN ---
-function iniciarJuego(numJugadores) {
-    gameState.totalJugadores = numJugadores;
-    gameState.jugadores = [];
-    
-    const colores = ['red', 'green', 'yellow', 'blue'];
-    const nombres = ['Rojo', 'Verde', 'Amarillo', 'Azul'];
-    const rutas = [rutaRoja, rutaVerde, rutaAmarilla, rutaAzul];
-    
-    // Coordenadas bases (4 esquinas)
-    const bases = [
-        [{c: 2, r: 2}, {c: 3, r: 2}, {c: 2, r: 3}, {c: 3, r: 3}],
-        [{c: 13, r: 2}, {c: 14, r: 2}, {c: 13, r: 3}, {c: 14, r: 3}],
-        [{c: 13, r: 13}, {c: 14, r: 13}, {c: 13, r: 14}, {c: 14, r: 14}],
-        [{c: 2, r: 13}, {c: 3, r: 13}, {c: 2, r: 14}, {c: 3, r: 14}]
-    ];
 
-    const container = document.getElementById('tokens-container');
-    container.innerHTML = '';
+    // --- 1. CONFIGURACIÓN INICIAL Y ESCUCHA (FUERA DE TODO) ---
+const gameState = {
+    jugadores: [],
+    turnoActual: 0,
+    fase: 'ESPERANDO',
+    modoTiro: 'NORMAL',
+    totalJugadores: 0,
+    pasosPendientes: 0,
+    ultimoValorDado: 0
+};
 
-    for (let i = 0; i < numJugadores; i++) {
-        let fichasJugador = [];
-        for (let f = 0; f < 4; f++) {
-            const div = document.createElement('div');
-            div.id = `token-${i}-${f}`;
-            div.className = `token ${colores[i]}`;
-            div.onclick = () => seleccionarFicha(i, f);
-            container.appendChild(div);
-            moverFichaCSS(div, bases[i][f].c, bases[i][f].r);
-
-            fichasJugador.push({ id: f, posIndex: -1, baseCoord: bases[i][f] });
-        }
-        gameState.jugadores.push({
-            id: i, nombre: nombres[i], color: colores[i],
-            fichas: fichasJugador, ruta: rutas[i]
-        });
-    }
-
-    document.getElementById('start-screen').style.display = 'none';
-    actualizarUI();
-
-
-
-
-    // --- 1. ESCUCHA CONSTANTE (Debe ir afuera de cualquier función) ---
+// ESTO DEBE ESTAR SIEMPRE ACTIVO
 if (window.onValue) {
     window.onValue(window.ref(window.db, 'partida/'), (snapshot) => {
         const data = snapshot.val();
         if (!data) return;
 
-        // 🔥 NUEVO: Si alguien tiró el dado, actualizar la imagen del dado para todos
-    if (data.ultimoValorDado) {
-        document.getElementById('dice-img').src = `img/dado${data.ultimoValorDado}.jpg`;
-        document.getElementById('game-msg').innerText = "Salió un: " + data.ultimoValorDado;
-    }
-
-        // A. Si el juego no ha arrancado en mi pantalla pero ya hay datos en la nube
+        // A. Sincronizar Tablero si no existe
         if (gameState.jugadores.length === 0 && data.totalJugadores) {
-            console.log("🔥 Detectada partida en curso. Iniciando tablero...");
             iniciarTableroLocal(data.totalJugadores);
         }
 
-        // B. Sincronizar datos básicos
+        // B. Sincronizar Estado Global
         gameState.turnoActual = data.turnoActual;
         gameState.fase = data.fase;
         gameState.pasosPendientes = data.pasosPendientes || 0;
+        gameState.ultimoValorDado = data.ultimoValorDado || 1;
 
-        // C. Sincronizar fichas (Solo si el tablero ya existe)
-        if (gameState.jugadores.length > 0) {
+        // C. Actualizar Visuales (Dado y Mensajes)
+        document.getElementById('dice-img').src = `img/dado${gameState.ultimoValorDado}.jpg`;
+        actualizarUI();
+
+        // D. Sincronizar Fichas
+        if (gameState.jugadores.length > 0 && data.jugadores) {
             data.jugadores.forEach((jData, jIdx) => {
                 jData.fichas.forEach((fData, fIdx) => {
                     const fichaLocal = gameState.jugadores[jIdx].fichas[fIdx];
-                    
-                    // Solo movemos si la posición en Firebase es distinta a la nuestra
                     if (fichaLocal.posIndex !== fData.posIndex) {
                         fichaLocal.posIndex = fData.posIndex;
                         const div = document.getElementById(`token-${jIdx}-${fIdx}`);
                         const coord = fData.posIndex === -1 
                             ? fichaLocal.baseCoord 
                             : gameState.jugadores[jIdx].ruta[fData.posIndex];
-                        
                         if (div) moverFichaCSS(div, coord.c, coord.r);
                     }
                 });
             });
-            actualizarUI();
+        }
+        
+        // E. Si la fase es SELECCIONANDO, habilitar las fichas para el jugador de turno
+        if (gameState.fase === 'SELECCIONANDO') {
+            verificarMovimientosLocales(gameState.pasosPendientes, gameState.ultimoValorDado);
         }
     });
 }
 
-// --- 2. FUNCIÓN PARA CREAR EL TABLERO (Solo visual) ---
-function iniciarTableroLocal(numJugadores) {
-    gameState.totalJugadores = numJugadores;
-    gameState.jugadores = [];
+// --- 2. FUNCIONES DE ACCIÓN (SUBEN DATOS A FIREBASE) ---
+
+function accionPrincipal() {
+    if (gameState.fase !== 'ESPERANDO') return;
     
-    const colores = ['red', 'green', 'yellow', 'blue'];
-    const nombres = ['Rojo', 'Verde', 'Amarillo', 'Azul'];
-    const rutas = [rutaRoja, rutaVerde, rutaAmarilla, rutaAzul];
-    const bases = [
-        [{c: 2, r: 2}, {c: 3, r: 2}, {c: 2, r: 3}, {c: 3, r: 3}],
-        [{c: 13, r: 2}, {c: 14, r: 2}, {c: 13, r: 3}, {c: 14, r: 3}],
-        [{c: 13, r: 13}, {c: 14, r: 13}, {c: 13, r: 14}, {c: 14, r: 14}],
-        [{c: 2, r: 13}, {c: 3, r: 13}, {c: 2, r: 14}, {c: 3, r: 14}]
-    ];
+    // Aquí puedes añadir: if (miColorAsignado !== colorDelTurno) return;
 
-    const container = document.getElementById('tokens-container');
-    container.innerHTML = '';
+    // 1. Decidimos el resultado AQUÍ (una sola vez)
+    const dadoEscogido = Math.floor(Math.random() * 6) + 1;
+    const bonusEscogido = 0; // Aquí puedes sumar tu lógica de slots si quieres
+    const total = dadoEscogido + bonusEscogido;
 
-    for (let i = 0; i < numJugadores; i++) {
-        let fichasJugador = [];
-        for (let f = 0; f < 4; f++) {
-            const div = document.createElement('div');
-            div.id = `token-${i}-${f}`;
-            div.className = `token ${colores[i]}`;
-            div.onclick = () => seleccionarFicha(i, f);
-            container.appendChild(div);
-            moverFichaCSS(div, bases[i][f].c, bases[i][f].r);
+    // 2. Avisamos a todos los jugadores subiendo el dato
+    window.update(window.ref(window.db, 'partida/'), {
+        ultimoValorDado: dadoEscogido,
+        pasosPendientes: total,
+        fase: 'SELECCIONANDO' 
+    });
+}
 
-            fichasJugador.push({ id: f, posIndex: -1, baseCoord: bases[i][f] });
+// Esta función solo pone las lucecitas amarillas en las fichas
+function verificarMovimientosLocales(pasos, dado) {
+    const jugador = gameState.jugadores[gameState.turnoActual];
+    let posibles = 0;
+
+    jugador.fichas.forEach(ficha => {
+        const div = document.getElementById(`token-${jugador.id}-${ficha.id}`);
+        div.classList.remove('selectable');
+        let puede = (ficha.posIndex === -1) ? (dado === 6) : (ficha.posIndex + pasos < jugador.ruta.length);
+
+        if (puede) {
+            div.classList.add('selectable');
+            posibles++;
         }
-        gameState.jugadores.push({
-            id: i, nombre: nombres[i], color: colores[i],
-            fichas: fichasJugador, ruta: rutas[i]
-        });
-    }
-    document.getElementById('start-screen').style.display = 'none';
-}
+    });
 
-// --- 3. BOTÓN DE INICIO (El que presiona el primer jugador) ---
-function iniciarJuego(numJugadores) {
-    // Creamos el tablero localmente primero
-    iniciarTableroLocal(numJugadores);
-
-    // SUBIMOS el estado inicial a Firebase para que los demás lo vean
-    if (window.set) {
-        window.set(window.ref(window.db, 'partida/'), {
-            totalJugadores: numJugadores,
-            turnoActual: 0,
-            fase: 'ESPERANDO',
-            jugadores: gameState.jugadores.map(j => ({
-                id: j.id,
-                fichas: j.fichas.map(f => ({ id: f.id, posIndex: f.posIndex }))
-            }))
-        });
+    document.getElementById('game-msg').innerText = posibles > 0 ? "¡Elige ficha!" : "No hay movimientos.";
+    if (posibles === 0 && miColorAsignado === jugador.color) {
+         setTimeout(pasarTurnoFirebase, 2000);
     }
 }
+
+function seleccionarFicha(jugadorId, fichaId) {
+    if (gameState.fase !== 'SELECCIONANDO') return;
+    if (jugadorId !== gameState.turnoActual) return;
     
-
+    // 1. Mover localmente para feedback instantáneo
+    moverFichaFirebase(fichaId);
 }
+
+function moverFichaFirebase(fichaId) {
+    const jugador = gameState.jugadores[gameState.turnoActual];
+    const ficha = jugador.fichas[fichaId];
+    
+    let nuevoIndice = (ficha.posIndex === -1) ? 0 : ficha.posIndex + gameState.pasosPendientes;
+    
+    // 2. Subir el movimiento a Firebase
+    const updates = {};
+    updates[`partida/jugadores/${gameState.turnoActual}/fichas/${fichaId}/posIndex`] = nuevoIndice;
+    
+    // Si no sacó 6, cambiar el turno
+    if (gameState.ultimoValorDado !== 6) {
+        updates['partida/turnoActual'] = (gameState.turnoActual + 1) % gameState.totalJugadores;
+    }
+    
+    updates['partida/fase'] = 'ESPERANDO';
+    window.update(window.ref(window.db), updates);
+}
+
+
 
 function toggleRules() {
     const modal = document.getElementById('rules-modal');
