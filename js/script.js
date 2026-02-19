@@ -331,4 +331,14 @@ window.iniciarJuego = function(num) {
         pasosPendientes: 0,
         jugadores: jugadoresFirebase
     });
-};
+}
+
+function toggleRules() {
+    const modal = document.getElementById('rules-modal');
+    modal.style.display = modal.style.display === 'none' ? 'block' : 'none';
+}
+
+// Asignar funciones globales para que el HTML las vea
+window.accionPrincipal = accionPrincipal;
+window.toggleRules = toggleRules;
+window.seleccionarFicha = seleccionarFicha;
