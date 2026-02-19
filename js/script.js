@@ -36,14 +36,26 @@ const COLORES = ['red', 'green', 'yellow', 'blue'];
 // ESCUCHAR A FIREBASE (El Cerebro)
 // ============================================
 
-if (window.onValue) {
+// Creamos una función que insiste hasta conectarse
+function conectarConFirebase() {
+    // 1. Preguntamos: ¿Firebase ya cargó?
+    if (!window.onValue || !window.db) {
+        // Si NO ha cargado, esperamos 100ms y volvemos a intentar
+        console.log("Esperando a Firebase...");
+        setTimeout(conectarConFirebase, 100);
+        return;
+    }
+
+    // 2. Si YA cargó, activamos la escucha (Sin el if de antes)
+    console.log("¡Conectado exitosamente!");
+    
     window.onValue(window.ref(window.db, 'partida/'), (snapshot) => {
         const data = snapshot.val();
 
         // 1. Si no hay datos, mostrar menú inicio
         if (!data) {
             document.getElementById('start-screen').style.display = 'flex';
-            document.getElementById('tokens-container').innerHTML = ''; // Limpiar fichas viejas
+            document.getElementById('tokens-container').innerHTML = ''; 
             return;
         }
 
@@ -57,9 +69,8 @@ if (window.onValue) {
         gameState.pasosPendientes = data.pasosPendientes;
         gameState.ultimoValorDado = data.ultimoValorDado;
 
-        // 4. GENERAR FICHAS SI NO EXISTEN (AQUÍ ESTABA EL ERROR)
+        // 4. GENERAR FICHAS SI NO EXISTEN
         const container = document.getElementById('tokens-container');
-        // Si la cantidad de fichas en pantalla es 0, las creamos
         if (container.children.length === 0) {
             iniciarTableroLocal(data.totalJugadores);
         }
@@ -67,6 +78,9 @@ if (window.onValue) {
         // 5. Mover fichas visualmente
         if (data.jugadores) {
             data.jugadores.forEach((jData, jIdx) => {
+                // Validación extra por si acaso
+                if (!jData.fichas) return;
+
                 jData.fichas.forEach((fData, fIdx) => {
                     const div = document.getElementById(`token-${jIdx}-${fIdx}`);
                     if(div) {
@@ -93,6 +107,10 @@ if (window.onValue) {
         }
     });
 }
+
+// Iniciamos el proceso de conexión
+conectarConFirebase();
+
 
 // ============================================
 // LÓGICA LOCAL
