@@ -6,7 +6,7 @@ const gameState = {
     modoTiro: 'NORMAL',
     totalJugadores: 0,
     pasosPendientes: 0,
-    ultimoValorDado: 0
+    ultimoValorDado: 1
 };
 
 const opcionesSlot = [1, 2, 7];
@@ -14,312 +14,189 @@ const ZONAS_SEGURAS = [
     {c: 2, r: 7}, {c: 14, r: 2}, {c: 14, r: 9}, {c: 7, r: 14}
 ];
 
-// --- RUTAS (Copiadas de tu lógica original) ---
+// --- RUTAS (Caminos de cada color) ---
 const rutaRoja = [{c: 2, r: 7}, {c: 3, r: 7}, {c: 4, r: 7}, {c: 5, r: 7}, {c: 6, r: 7}, {c: 7, r: 6}, {c: 7, r: 5}, {c: 7, r: 4}, {c: 7, r: 3}, {c: 7, r: 2}, {c: 7, r: 1}, {c: 8, r: 1}, {c: 9, r: 1}, {c: 9, r: 2}, {c: 9, r: 3}, {c: 9, r: 4}, {c: 9, r: 5}, {c: 9, r: 6}, {c: 10, r: 7}, {c: 11, r: 7}, {c: 12, r: 7}, {c: 13, r: 7}, {c: 14, r: 7}, {c: 15, r: 7}, {c: 15, r: 8}, {c: 15, r: 9}, {c: 14, r: 9}, {c: 13, r: 9}, {c: 12, r: 9}, {c: 11, r: 9}, {c: 10, r: 9}, {c: 9, r: 10}, {c: 9, r: 11}, {c: 9, r: 12}, {c: 9, r: 13}, {c: 9, r: 14}, {c: 9, r: 15}, {c: 8, r: 15}, {c: 7, r: 15}, {c: 7, r: 14}, {c: 7, r: 13}, {c: 7, r: 12}, {c: 7, r: 11}, {c: 7, r: 10}, {c: 6, r: 9}, {c: 5, r: 9}, {c: 4, r: 9}, {c: 3, r: 9}, {c: 2, r: 9}, {c: 1, r: 9}, {c: 1, r: 8}, {c: 2, r: 8}, {c: 3, r: 8}, {c: 4, r: 8}, {c: 5, r: 8}, {c: 6, r: 8}, {c: 7, r: 8}];
 const rutaVerde = [{c: 9, r: 2}, {c: 9, r: 3}, {c: 9, r: 4}, {c: 9, r: 5}, {c: 9, r: 6}, {c: 10, r: 7}, {c: 11, r: 7}, {c: 12, r: 7}, {c: 13, r: 7}, {c: 14, r: 7}, {c: 15, r: 7}, {c: 15, r: 8}, {c: 15, r: 9}, {c: 14, r: 9}, {c: 13, r: 9}, {c: 12, r: 9}, {c: 11, r: 9}, {c: 10, r: 9}, {c: 9, r: 10}, {c: 9, r: 11}, {c: 9, r: 12}, {c: 9, r: 13}, {c: 9, r: 14}, {c: 9, r: 15}, {c: 8, r: 15}, {c: 7, r: 15}, {c: 7, r: 14}, {c: 7, r: 13}, {c: 7, r: 12}, {c: 7, r: 11}, {c: 7, r: 10}, {c: 6, r: 9}, {c: 5, r: 9}, {c: 4, r: 9}, {c: 3, r: 9}, {c: 2, r: 9}, {c: 1, r: 9}, {c: 1, r: 8}, {c: 1, r: 7}, {c: 2, r: 7}, {c: 3, r: 7}, {c: 4, r: 7}, {c: 5, r: 7}, {c: 6, r: 7}, {c: 7, r: 6}, {c: 7, r: 5}, {c: 7, r: 4}, {c: 7, r: 3}, {c: 7, r: 2}, {c: 7, r: 1}, {c: 8, r: 1}, {c: 8, r: 2}, {c: 8, r: 3}, {c: 8, r: 4}, {c: 8, r: 5}, {c: 8, r: 6}, {c: 8, r: 7}];
 const rutaAmarilla = [{c: 14, r: 9}, {c: 13, r: 9}, {c: 12, r: 9}, {c: 11, r: 9}, {c: 10, r: 9}, {c: 9, r: 10}, {c: 9, r: 11}, {c: 9, r: 12}, {c: 9, r: 13}, {c: 9, r: 14}, {c: 9, r: 15}, {c: 8, r: 15}, {c: 7, r: 15}, {c: 7, r: 14}, {c: 7, r: 13}, {c: 7, r: 12}, {c: 7, r: 11}, {c: 7, r: 10}, {c: 6, r: 9}, {c: 5, r: 9}, {c: 4, r: 9}, {c: 3, r: 9}, {c: 2, r: 9}, {c: 1, r: 9}, {c: 1, r: 8}, {c: 1, r: 7}, {c: 2, r: 7}, {c: 3, r: 7}, {c: 4, r: 7}, {c: 5, r: 7}, {c: 6, r: 7}, {c: 7, r: 6}, {c: 7, r: 5}, {c: 7, r: 4}, {c: 7, r: 3}, {c: 7, r: 2}, {c: 7, r: 1}, {c: 8, r: 1}, {c: 9, r: 1}, {c: 9, r: 2}, {c: 9, r: 3}, {c: 9, r: 4}, {c: 9, r: 5}, {c: 9, r: 6}, {c: 10, r: 7}, {c: 11, r: 7}, {c: 12, r: 7}, {c: 13, r: 7}, {c: 14, r: 7}, {c: 15, r: 7}, {c: 15, r: 8}, {c: 14, r: 8}, {c: 13, r: 8}, {c: 12, r: 8}, {c: 11, r: 8}, {c: 10, r: 8}, {c: 9, r: 8}];
 const rutaAzul = [{c: 7, r: 14}, {c: 7, r: 13}, {c: 7, r: 12}, {c: 7, r: 11}, {c: 7, r: 10}, {c: 6, r: 9}, {c: 5, r: 9}, {c: 4, r: 9}, {c: 3, r: 9}, {c: 2, r: 9}, {c: 1, r: 9}, {c: 1, r: 8}, {c: 1, r: 7}, {c: 2, r: 7}, {c: 3, r: 7}, {c: 4, r: 7}, {c: 5, r: 7}, {c: 6, r: 7}, {c: 7, r: 6}, {c: 7, r: 5}, {c: 7, r: 4}, {c: 7, r: 3}, {c: 7, r: 2}, {c: 7, r: 1}, {c: 8, r: 1}, {c: 9, r: 1}, {c: 9, r: 2}, {c: 9, r: 3}, {c: 9, r: 4}, {c: 9, r: 5}, {c: 9, r: 6}, {c: 10, r: 7}, {c: 11, r: 7}, {c: 12, r: 7}, {c: 13, r: 7}, {c: 14, r: 7}, {c: 15, r: 7}, {c: 15, r: 8}, {c: 15, r: 9}, {c: 14, r: 9}, {c: 13, r: 9}, {c: 12, r: 9}, {c: 11, r: 9}, {c: 10, r: 9}, {c: 9, r: 10}, {c: 9, r: 11}, {c: 9, r: 12}, {c: 9, r: 13}, {c: 9, r: 14}, {c: 9, r: 15}, {c: 8, r: 15}, {c: 8, r: 14}, {c: 8, r: 13}, {c: 8, r: 12}, {c: 8, r: 11}, {c: 8, r: 10}, {c: 8, r: 9}];
 
-// --- ESCUCHA DE FIREBASE (EL CEREBRO) ---
+// Coordenadas bases (4 esquinas)
+const BASES = [
+    [{c: 2, r: 2}, {c: 3, r: 2}, {c: 2, r: 3}, {c: 3, r: 3}], // Rojo
+    [{c: 13, r: 2}, {c: 14, r: 2}, {c: 13, r: 3}, {c: 14, r: 3}], // Verde
+    [{c: 13, r: 13}, {c: 14, r: 13}, {c: 13, r: 14}, {c: 14, r: 14}], // Amarillo
+    [{c: 2, r: 13}, {c: 3, r: 13}, {c: 2, r: 14}, {c: 3, r: 14}] // Azul
+];
+
+const RUTAS_JUGADORES = [rutaRoja, rutaVerde, rutaAmarilla, rutaAzul];
+const NOMBRES = ['Rojo', 'Verde', 'Amarillo', 'Azul'];
+const COLORES = ['red', 'green', 'yellow', 'blue'];
+
+// ============================================
+// ESCUCHAR A FIREBASE (El Cerebro)
+// ============================================
+
 if (window.onValue) {
     window.onValue(window.ref(window.db, 'partida/'), (snapshot) => {
         const data = snapshot.val();
-        if (!data) return;
 
-        // 1. Sincronizar tablero inicial si no existe
-        if (gameState.jugadores.length === 0 && data.totalJugadores) {
+        // 1. Si no hay datos, mostrar menú inicio
+        if (!data) {
+            document.getElementById('start-screen').style.display = 'flex';
+            document.getElementById('tokens-container').innerHTML = ''; // Limpiar fichas viejas
+            return;
+        }
+
+        // 2. Si hay datos, ocultar menú
+        document.getElementById('start-screen').style.display = 'none';
+
+        // 3. Sincronizar Variables
+        gameState.turnoActual = data.turnoActual;
+        gameState.fase = data.fase;
+        gameState.totalJugadores = data.totalJugadores;
+        gameState.pasosPendientes = data.pasosPendientes;
+        gameState.ultimoValorDado = data.ultimoValorDado;
+
+        // 4. GENERAR FICHAS SI NO EXISTEN (AQUÍ ESTABA EL ERROR)
+        const container = document.getElementById('tokens-container');
+        // Si la cantidad de fichas en pantalla es 0, las creamos
+        if (container.children.length === 0) {
             iniciarTableroLocal(data.totalJugadores);
         }
 
-        // 2. Actualizar estado global desde la nube
-        gameState.turnoActual = data.turnoActual;
-        gameState.fase = data.fase;
-        gameState.pasosPendientes = data.pasosPendientes || 0;
-        gameState.ultimoValorDado = data.ultimoValorDado || 1;
-
-        // 3. Actualizar UI y Dado para todos
-        document.getElementById('dice-img').src = `img/dado${gameState.ultimoValorDado}.jpg`;
-        actualizarUI();
-
-        // 4. Mover fichas de otros jugadores
-        if (gameState.jugadores.length > 0 && data.jugadores) {
+        // 5. Mover fichas visualmente
+        if (data.jugadores) {
             data.jugadores.forEach((jData, jIdx) => {
                 jData.fichas.forEach((fData, fIdx) => {
-                    const fichaLocal = gameState.jugadores[jIdx].fichas[fIdx];
-                    if (fichaLocal.posIndex !== fData.posIndex) {
-                        fichaLocal.posIndex = fData.posIndex;
-                        const div = document.getElementById(`token-${jIdx}-${fIdx}`);
+                    const div = document.getElementById(`token-${jIdx}-${fIdx}`);
+                    if(div) {
                         const coord = (fData.posIndex === -1) 
-                            ? fichaLocal.baseCoord 
-                            : gameState.jugadores[jIdx].ruta[fData.posIndex];
+                            ? BASES[jIdx][fIdx] 
+                            : RUTAS_JUGADORES[jIdx][fData.posIndex];
                         moverFichaCSS(div, coord.c, coord.r);
+                        
+                        // Sincronizar memoria local
+                        if(gameState.jugadores[jIdx] && gameState.jugadores[jIdx].fichas[fIdx]) {
+                            gameState.jugadores[jIdx].fichas[fIdx].posIndex = fData.posIndex;
+                        }
                     }
                 });
             });
         }
 
-        // 5. Si es fase de selección, iluminar fichas
+        // 6. Actualizar UI
+        actualizarInterfazGlobal();
+
+        // 7. Iluminar si toca seleccionar
         if (gameState.fase === 'SELECCIONANDO') {
-            verificarMovimientos(gameState.pasosPendientes, gameState.ultimoValorDado);
+            iluminarFichasMovibles();
         }
     });
 }
 
-// --- ACCIÓN DE GIRAR (SINCRONIZADA) ---
-function accionPrincipal() {
-    if (gameState.fase !== 'ESPERANDO') return;
-    
-    // Bloqueo de seguridad: solo el jugador de turno puede tirar
-    // if (miColorAsignado !== gameState.jugadores[gameState.turnoActual].color) return;
+// ============================================
+// LÓGICA LOCAL
+// ============================================
 
-    gameState.fase = 'GIRANDO'; // Estado local temporal
-    document.getElementById('dice-img').classList.add('rolling');
+// ESTA FUNCIÓN ES LA QUE CREA LOS DIVS DE COLORES
+function iniciarTableroLocal(numJugadores) {
+    gameState.totalJugadores = numJugadores;
+    const container = document.getElementById('tokens-container');
+    container.innerHTML = ''; 
 
-    let iter = 0;
-    const intervalo = setInterval(() => {
-        // Animación visual de slots y dado
-        document.getElementById('reel1').innerText = rndArr(opcionesSlot);
-        document.getElementById('reel2').innerText = rndArr(opcionesSlot);
-        document.getElementById('reel3').innerText = rndArr(opcionesSlot);
-        const dTmp = Math.floor(Math.random() * 6) + 1;
-        document.getElementById('dice-img').src = `img/dado${dTmp}.jpg`;
+    gameState.jugadores = []; // Reiniciar memoria local
+
+    for (let i = 0; i < numJugadores; i++) {
+        let fichasLocales = [];
         
-        iter++;
-        if (iter > 12) {
-            clearInterval(intervalo);
-            finalizarTiro();
-        }
-    }, 100);
-}
-
-function finalizarTiro() {
-    document.getElementById('dice-img').classList.remove('rolling');
-    
-    // 1. Calcular resultados finales
-    const s1 = rndArr(opcionesSlot);
-    const s2 = rndArr(opcionesSlot);
-    const s3 = rndArr(opcionesSlot);
-    const bonus = calcularBonus(s1, s2, s3);
-    const dado = Math.floor(Math.random() * 6) + 1;
-    const total = dado + bonus;
-
-    // Mostrar en UI
-    document.getElementById('reel1').innerText = s1;
-    document.getElementById('reel2').innerText = s2;
-    document.getElementById('reel3').innerText = s3;
-    document.getElementById('math-result').innerHTML = `Slot (${bonus}) + Dado (${dado}) = <b>${total}</b>`;
-
-    if (dado === 6) mostrarCelebracion6();
-
-    // 2. Subir a Firebase para que todos vean lo mismo
-    window.update(window.ref(window.db, 'partida/'), {
-        ultimoValorDado: dado,
-        pasosPendientes: total,
-        fase: 'SELECCIONANDO'
-    });
-}
-
-// --- SELECCIÓN Y MOVIMIENTO ---
-function seleccionarFicha(jugadorId, fichaId) {
-    if (gameState.fase !== 'SELECCIONANDO') return;
-    if (jugadorId !== gameState.turnoActual) return;
-    
-    const jugador = gameState.jugadores[jugadorId];
-    const ficha = jugador.fichas[fichaId];
-    
-    // Calcular nueva posición
-    let nuevoIndex = (ficha.posIndex === -1) ? 0 : ficha.posIndex + gameState.pasosPendientes;
-    const coordDestino = jugador.ruta[nuevoIndex];
-
-    // Lógica de Captura (Matar)
-    verificarCaptura(jugador, coordDestino);
-
-    // Preparar actualización para Firebase
-    const updates = {};
-    const pathBase = `partida/jugadores/${jugadorId}/fichas/${fichaId}`;
-    updates[pathBase + '/posIndex'] = nuevoIndex;
-
-    // Determinar siguiente turno
-    if (gameState.ultimoValorDado !== 6) {
-        updates['partida/turnoActual'] = (gameState.turnoActual + 1) % gameState.totalJugadores;
-    }
-
-    updates['partida/fase'] = 'ESPERANDO';
-    updates['partida/pasosPendientes'] = 0;
-
-    window.update(window.ref(window.db), updates);
-}
-
-function verificarCaptura(atacante, coordDestino) {
-    // Si es zona segura, nadie muere
-    const esSeguro = ZONAS_SEGURAS.some(z => z.c === coordDestino.c && z.r === coordDestino.r);
-    if (esSeguro) return;
-
-    gameState.jugadores.forEach((enemigo, eIdx) => {
-        if (eIdx === gameState.turnoActual) return; // No se mata a sí mismo
-
-        enemigo.fichas.forEach((fEnemiga, fIdx) => {
-            if (fEnemiga.posIndex === -1) return;
+        for (let f = 0; f < 4; f++) {
+            // Crear DIV
+            const div = document.createElement('div');
+            div.id = `token-${i}-${f}`;
+            div.className = `token ${COLORES[i]}`;
+            div.onclick = () => intentarMoverFicha(i, f);
             
-            const coordE = enemigo.ruta[fEnemiga.posIndex];
-            if (coordE.c === coordDestino.c && coordE.r === coordDestino.r) {
-                // ¡Muerte! Actualizamos Firebase directamente para resetear al enemigo
-                const pathEnemigo = `partida/jugadores/${eIdx}/fichas/${fIdx}/posIndex`;
-                const up = {};
-                up[pathEnemigo] = -1;
-                window.update(window.ref(window.db), up);
-                console.log("Ficha capturada!");
-            }
+            container.appendChild(div);
+            
+            // Guardar en memoria
+            fichasLocales.push({ id: f, posIndex: -1 });
+        }
+
+        gameState.jugadores.push({
+            id: i,
+            nombre: NOMBRES[i],
+            color: COLORES[i],
+            ruta: RUTAS_JUGADORES[i],
+            fichas: fichasLocales
         });
-    });
+    }
 }
 
-// --- UTILS RESTANTES ---
-function actualizarUI() {
+function actualizarInterfazGlobal() {
     const j = gameState.jugadores[gameState.turnoActual];
     if(!j) return;
+
     const ind = document.getElementById('turn-indicator');
     ind.innerText = `Turno: ${j.nombre}`;
     ind.style.color = getHexColor(j.color);
-    document.getElementById('game-msg').innerText = (gameState.fase === 'SELECCIONANDO') ? "¡Mueve una ficha!" : "Espera tu turno...";
-}
 
-function calcularBonus(n1, n2, n3) {
-    const arr = [n1, n2, n3];
-    const u=arr.filter(x=>x===1).length, d=arr.filter(x=>x===2).length, s=arr.filter(x=>x===7).length;
-    if (s===3) return 7; if (d===3) return 4; if (u===3) return 2; 
-    if (d===2) return 2; if (u===2) return 1; 
-    return 0;
-}
+    document.getElementById('dice-img').src = `img/dado${gameState.ultimoValorDado}.jpg`;
 
-// --- DIBUJAR EL TABLERO Y CREAR FICHAS ---
-function iniciarTableroLocal(cantidad) {
-    gameState.totalJugadores = cantidad;
-    const colores = ['red', 'green', 'yellow', 'blue'];
-    const nombres = ['Rojo', 'Verde', 'Amarillo', 'Azul'];
-    const rutas = [rutaRoja, rutaVerde, rutaAmarilla, rutaAzul];
-    
-    // Coordenadas de las casas (donde empiezan las fichas)
-    const bases = [
-        [{c:2, r:2}, {c:3, r:2}, {c:2, r:3}, {c:3, r:3}], // Rojo
-        [{c:13, r:2}, {c:14, r:2}, {c:13, r:3}, {c:14, r:3}], // Verde
-        [{c:13, r:13}, {c:14, r:13}, {c:13, r:14}, {c:14, r:14}], // Amarillo
-        [{c:2, r:13}, {c:3, r:13}, {c:2, r:14}, {c:3, r:14}] // Azul
-    ];
+    const msg = document.getElementById('game-msg');
+    const btnText = document.getElementById('btn-text');
 
-    gameState.jugadores = [];
-    const board = document.getElementById('tokens-container');
-
-    for (let i = 0; i < cantidad; i++) {
-        let p = {
-            id: i,
-            nombre: nombres[i],
-            color: colores[i],
-            ruta: rutas[i],
-            fichas: []
-        };
-
-        for (let f = 0; f < 4; f++) {
-            const fID = `token-${i}-${f}`;
-            // Crear el elemento HTML de la ficha si no existe
-            if (!document.getElementById(fID)) {
-                const div = document.createElement('div');
-                div.id = fID;
-                div.className = `token ${colores[i]}`;
-                div.onclick = () => seleccionarFicha(i, f);
-                board.appendChild(div);
-            }
-
-            p.fichas.push({
-                id: f,
-                posIndex: -1, // -1 significa en casa
-                baseCoord: bases[i][f]
-            });
-
-            // Posición inicial visual
-            const divFicha = document.getElementById(fID);
-            moverFichaCSS(divFicha, bases[i][f].c, bases[i][f].r);
-        }
-        gameState.jugadores.push(p);
+    if (gameState.fase === 'ESPERANDO') {
+        msg.innerText = "¡Espera tu turno o Gira!";
+        btnText.innerText = (gameState.modoTiro === 'NORMAL') ? "GIRAR SLOT" : "¡DADO EXTRA!";
+        btnText.style.color = (gameState.modoTiro === 'NORMAL') ? "gold" : "cyan";
+    } else if (gameState.fase === 'SELECCIONANDO') {
+        msg.innerText = "👈 ¡Elige una ficha iluminada!";
     }
 }
 
-// --- VERIFICAR MOVIMIENTOS POSIBLES (ILUMINAR) ---
-function verificarMovimientos(pasos, dado) {
-    const jugador = gameState.jugadores[gameState.turnoActual];
-    let posibles = 0;
+function iluminarFichasMovibles() {
+    document.querySelectorAll('.token').forEach(t => t.classList.remove('selectable'));
 
-    jugador.fichas.forEach(ficha => {
-        const div = document.getElementById(`token-${jugador.id}-${ficha.id}`);
-        div.classList.remove('selectable');
-        
+    const jugador = gameState.jugadores[gameState.turnoActual];
+    const pasos = gameState.pasosPendientes;
+    const dado = gameState.ultimoValorDado;
+    let hayMovimientos = false;
+
+    jugador.fichas.forEach((ficha, fIdx) => {
         let puede = false;
         if (ficha.posIndex === -1) {
-            if (dado === 6) puede = true; // Solo sale con 6
+            if (dado === 6) puede = true;
         } else {
-            // No puede pasarse de la meta (longitud de la ruta)
             if (ficha.posIndex + pasos < jugador.ruta.length) puede = true;
         }
 
         if (puede) {
-            div.classList.add('selectable');
-            posibles++;
+            const div = document.getElementById(`token-${gameState.turnoActual}-${fIdx}`);
+            if(div) div.classList.add('selectable');
+            hayMovimientos = true;
         }
     });
 
-    if (posibles === 0) {
-        document.getElementById('game-msg').innerText = "Sin movimientos. Pasando turno...";
-        // Si no hay movimientos, pasamos turno en Firebase tras 2 seg
+    if (!hayMovimientos) {
+        document.getElementById('game-msg').innerText = "🚫 Sin movimientos. Pasando turno...";
+        // Solo quien tenga el turno ejecuta el pase (para evitar duplicados)
+        // En local todos son "dueños", así que usamos un timeout simple
         setTimeout(() => {
-            const sigTurno = (gameState.turnoActual + 1) % gameState.totalJugadores;
-            window.update(window.ref(window.db, 'partida/'), {
-                turnoActual: sigTurno,
-                fase: 'ESPERANDO'
-            });
+            // Verificamos si seguimos en la misma fase para no enviar doble
+            if (gameState.fase === 'SELECCIONANDO') pasarTurnoEnNube();
         }, 2000);
     }
 }
 
-// --- CELEBRACIÓN CHIKAWA ---
-function mostrarCelebracion6() {
-    const modal = document.getElementById('chikawa-modal');
-    if(modal) {
-        modal.style.display = 'flex';
-        setTimeout(() => { modal.style.display = 'none'; }, 1800);
-    }
-}
+// ============================================
+// ACCIONES (ENVÍAN A FIREBASE)
+// ============================================
 
-// Auxiliar para mover visualmente
-function moverFichaCSS(el, c, r) {
-    if(!el) return;
-    el.style.gridColumnStart = c;
-    el.style.gridRowStart = r;
-}
-
-// Auxiliar colores hex
-function getHexColor(n) {
-    const m={'red':'#ff4d4d','green':'#2ecc71','yellow':'#f1c40f','blue':'#3498db'};
-    return m[n]||'#fff';
-}
-
-// Auxiliar aleatorio
-function rndArr(a) { return a[Math.floor(Math.random()*a.length)]; }
-
-// --- FUNCIÓN PARA ARRANCAR EL JUEGO (BOTONES DEL MODAL) ---
 window.iniciarJuego = function(num) {
-    console.log("Iniciando para", num, "jugadores...");
-    
-    // 1. Ocultar el modal de inicio
-    document.getElementById('start-screen').style.display = 'none';
-
-    // 2. Crear la estructura inicial en Firebase
-    // Esto hará que el "onValue" de todos los jugadores se active
-    const jugadoresFirebase = [];
+    const jugadoresInit = [];
     for(let i=0; i<num; i++) {
-        jugadoresFirebase.push({
-            fichas: [
-                {posIndex: -1}, {posIndex: -1}, {posIndex: -1}, {posIndex: -1}
-            ]
+        jugadoresInit.push({
+            fichas: [{posIndex: -1}, {posIndex: -1}, {posIndex: -1}, {posIndex: -1}]
         });
     }
 
@@ -329,16 +206,134 @@ window.iniciarJuego = function(num) {
         fase: 'ESPERANDO',
         ultimoValorDado: 1,
         pasosPendientes: 0,
-        jugadores: jugadoresFirebase
+        jugadores: jugadoresInit,
+        modoTiro: 'NORMAL'
+    });
+};
+
+window.accionPrincipal = function() {
+    if (gameState.fase !== 'ESPERANDO') return;
+    
+    // Animación local
+    gameState.fase = 'GIRANDO'; // Bloqueo temporal local
+    document.getElementById('dice-img').classList.add('rolling');
+    
+    let iter = 0;
+    const intervalo = setInterval(() => {
+        const d = Math.floor(Math.random() * 6) + 1;
+        document.getElementById('dice-img').src = `img/dado${d}.jpg`;
+        document.getElementById('reel1').innerText = rndArr(opcionesSlot);
+        document.getElementById('reel2').innerText = rndArr(opcionesSlot);
+        document.getElementById('reel3').innerText = rndArr(opcionesSlot);
+        iter++;
+        if (iter > 12) {
+            clearInterval(intervalo);
+            finalizarTiro();
+        }
+    }, 100);
+};
+
+function finalizarTiro() {
+    document.getElementById('dice-img').classList.remove('rolling');
+    
+    let bonus = 0;
+    let s1=1, s2=1, s3=1;
+
+    if (gameState.modoTiro === 'NORMAL') {
+        s1 = rndArr(opcionesSlot); s2 = rndArr(opcionesSlot); s3 = rndArr(opcionesSlot);
+        bonus = calcularBonus(s1, s2, s3);
+    }
+
+    const dado = Math.floor(Math.random() * 6) + 1;
+    const total = bonus + dado;
+
+    if (dado === 6) mostrarCelebracion6();
+
+    // Actualizar Firebase
+    window.update(window.ref(window.db, 'partida/'), {
+        ultimoValorDado: dado,
+        pasosPendientes: total,
+        fase: 'SELECCIONANDO'
     });
 }
 
-function toggleRules() {
-    const modal = document.getElementById('rules-modal');
-    modal.style.display = modal.style.display === 'none' ? 'block' : 'none';
+function intentarMoverFicha(jIdx, fIdx) {
+    if (gameState.fase !== 'SELECCIONANDO') return;
+    if (jIdx !== gameState.turnoActual) return;
+
+    const div = document.getElementById(`token-${jIdx}-${fIdx}`);
+    if (!div.classList.contains('selectable')) return;
+
+    const jugador = gameState.jugadores[jIdx];
+    const ficha = jugador.fichas[fIdx];
+    let nuevoIndex = (ficha.posIndex === -1) ? 0 : ficha.posIndex + gameState.pasosPendientes;
+
+    const updates = {};
+    const coordDestino = jugador.ruta[nuevoIndex];
+    verificarCaptura(jIdx, coordDestino, updates);
+
+    updates[`partida/jugadores/${jIdx}/fichas/${fIdx}/posIndex`] = nuevoIndex;
+
+    if (gameState.ultimoValorDado === 6) {
+        updates['partida/fase'] = 'ESPERANDO';
+        updates['partida/modoTiro'] = 'EXTRA';
+    } else {
+        updates['partida/fase'] = 'ESPERANDO';
+        updates['partida/modoTiro'] = 'NORMAL';
+        updates['partida/turnoActual'] = (gameState.turnoActual + 1) % gameState.totalJugadores;
+    }
+
+    window.update(window.ref(window.db), updates);
 }
 
-// Asignar funciones globales para que el HTML las vea
-window.accionPrincipal = accionPrincipal;
+// ============================================
+// UTILIDADES
+// ============================================
+
+function pasarTurnoEnNube() {
+    window.update(window.ref(window.db, 'partida/'), {
+        turnoActual: (gameState.turnoActual + 1) % gameState.totalJugadores,
+        fase: 'ESPERANDO',
+        modoTiro: 'NORMAL'
+    });
+}
+
+function verificarCaptura(miIdx, coordDestino, updatesRef) {
+    if (ZONAS_SEGURAS.some(z => z.c === coordDestino.c && z.r === coordDestino.r)) return;
+
+    gameState.jugadores.forEach((enemigo, eIdx) => {
+        if (eIdx === miIdx) return;
+        enemigo.fichas.forEach((fEnemiga, fIdx) => {
+            if (fEnemiga.posIndex !== -1) {
+                const cE = enemigo.ruta[fEnemiga.posIndex];
+                if (cE.c === coordDestino.c && cE.r === coordDestino.r) {
+                    updatesRef[`partida/jugadores/${eIdx}/fichas/${fIdx}/posIndex`] = -1;
+                }
+            }
+        });
+    });
+}
+
+function mostrarCelebracion6() {
+    const m = document.getElementById('chikawa-modal');
+    if(m) { m.style.display = 'flex'; setTimeout(() => m.style.display = 'none', 1500); }
+}
+
+function toggleRules() {
+    const m = document.getElementById('rules-modal');
+    m.style.display = (m.style.display === 'none') ? 'block' : 'none';
+}
+
+function calcularBonus(n1, n2, n3) {
+    const arr = [n1, n2, n3];
+    const u=arr.filter(x=>x===1).length, d=arr.filter(x=>x===2).length, s=arr.filter(x=>x===7).length;
+    if (s===3) return 7; if (d===3) return 4; if (u===3) return 2; if (d===2) return 2; if (u===2) return 1; return 0;
+}
+function rndArr(a) { return a[Math.floor(Math.random()*a.length)]; }
+function moverFichaCSS(el, c, r) { el.style.gridColumnStart = c; el.style.gridRowStart = r; }
+function getHexColor(n) { const m={'red':'#e74c3c','green':'#2ecc71','yellow':'#f1c40f','blue':'#3498db'}; return m[n]||'#fff'; }
+function amITheCurrentPlayer() { return true; } // Por ahora todos pueden mover
+
+// Exponer globales
 window.toggleRules = toggleRules;
-window.seleccionarFicha = seleccionarFicha;
+window.accionPrincipal = accionPrincipal;
