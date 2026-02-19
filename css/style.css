@@ -283,3 +283,45 @@ body {
     from { opacity: 0; }
     to { opacity: 1; }
 }
+
+
+/* BOTÓN REINICIAR */
+.btn-reset {
+    background: #c0392b; color: white;
+    border: none; width: 30px; height: 30px;
+    border-radius: 50%; cursor: pointer;
+    font-weight: bold; font-size: 1.2rem;
+    display: flex; align-items: center; justify-content: center;
+}
+.btn-reset:hover { background: #e74c3c; }
+
+/* CAJA DE IDENTIDAD */
+.identity-box {
+    margin-top: 20px;
+    border-top: 1px solid rgba(255,255,255,0.1);
+    padding-top: 10px;
+}
+
+.identity-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+}
+
+.btn-id {
+    background: #333;
+    border: 2px solid #555;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1.2rem;
+    padding: 5px;
+    transition: transform 0.2s;
+}
+.btn-id:hover { transform: scale(1.1); }
+
+/* Feedback visual de quién soy */
+.btn-id.active {
+    border-color: white;
+    background: #555;
+    box-shadow: 0 0 10px rgba(255,255,255,0.5);
+}

@@ -9,12 +9,15 @@ const gameState = {
     ultimoValorDado: 1
 };
 
+// Variable local para saber quién soy YO en este navegador
+let miIdentidad = null; // 0=Rojo, 1=Verde, etc.
+
 const opcionesSlot = [1, 2, 7];
 const ZONAS_SEGURAS = [
     {c: 2, r: 7}, {c: 14, r: 2}, {c: 14, r: 9}, {c: 7, r: 14}
 ];
 
-// --- RUTAS (Caminos de cada color) ---
+// --- RUTAS ---
 const rutaRoja = [{c: 2, r: 7}, {c: 3, r: 7}, {c: 4, r: 7}, {c: 5, r: 7}, {c: 6, r: 7}, {c: 7, r: 6}, {c: 7, r: 5}, {c: 7, r: 4}, {c: 7, r: 3}, {c: 7, r: 2}, {c: 7, r: 1}, {c: 8, r: 1}, {c: 9, r: 1}, {c: 9, r: 2}, {c: 9, r: 3}, {c: 9, r: 4}, {c: 9, r: 5}, {c: 9, r: 6}, {c: 10, r: 7}, {c: 11, r: 7}, {c: 12, r: 7}, {c: 13, r: 7}, {c: 14, r: 7}, {c: 15, r: 7}, {c: 15, r: 8}, {c: 15, r: 9}, {c: 14, r: 9}, {c: 13, r: 9}, {c: 12, r: 9}, {c: 11, r: 9}, {c: 10, r: 9}, {c: 9, r: 10}, {c: 9, r: 11}, {c: 9, r: 12}, {c: 9, r: 13}, {c: 9, r: 14}, {c: 9, r: 15}, {c: 8, r: 15}, {c: 7, r: 15}, {c: 7, r: 14}, {c: 7, r: 13}, {c: 7, r: 12}, {c: 7, r: 11}, {c: 7, r: 10}, {c: 6, r: 9}, {c: 5, r: 9}, {c: 4, r: 9}, {c: 3, r: 9}, {c: 2, r: 9}, {c: 1, r: 9}, {c: 1, r: 8}, {c: 2, r: 8}, {c: 3, r: 8}, {c: 4, r: 8}, {c: 5, r: 8}, {c: 6, r: 8}, {c: 7, r: 8}];
 const rutaVerde = [{c: 9, r: 2}, {c: 9, r: 3}, {c: 9, r: 4}, {c: 9, r: 5}, {c: 9, r: 6}, {c: 10, r: 7}, {c: 11, r: 7}, {c: 12, r: 7}, {c: 13, r: 7}, {c: 14, r: 7}, {c: 15, r: 7}, {c: 15, r: 8}, {c: 15, r: 9}, {c: 14, r: 9}, {c: 13, r: 9}, {c: 12, r: 9}, {c: 11, r: 9}, {c: 10, r: 9}, {c: 9, r: 10}, {c: 9, r: 11}, {c: 9, r: 12}, {c: 9, r: 13}, {c: 9, r: 14}, {c: 9, r: 15}, {c: 8, r: 15}, {c: 7, r: 15}, {c: 7, r: 14}, {c: 7, r: 13}, {c: 7, r: 12}, {c: 7, r: 11}, {c: 7, r: 10}, {c: 6, r: 9}, {c: 5, r: 9}, {c: 4, r: 9}, {c: 3, r: 9}, {c: 2, r: 9}, {c: 1, r: 9}, {c: 1, r: 8}, {c: 1, r: 7}, {c: 2, r: 7}, {c: 3, r: 7}, {c: 4, r: 7}, {c: 5, r: 7}, {c: 6, r: 7}, {c: 7, r: 6}, {c: 7, r: 5}, {c: 7, r: 4}, {c: 7, r: 3}, {c: 7, r: 2}, {c: 7, r: 1}, {c: 8, r: 1}, {c: 8, r: 2}, {c: 8, r: 3}, {c: 8, r: 4}, {c: 8, r: 5}, {c: 8, r: 6}, {c: 8, r: 7}];
 const rutaAmarilla = [{c: 14, r: 9}, {c: 13, r: 9}, {c: 12, r: 9}, {c: 11, r: 9}, {c: 10, r: 9}, {c: 9, r: 10}, {c: 9, r: 11}, {c: 9, r: 12}, {c: 9, r: 13}, {c: 9, r: 14}, {c: 9, r: 15}, {c: 8, r: 15}, {c: 7, r: 15}, {c: 7, r: 14}, {c: 7, r: 13}, {c: 7, r: 12}, {c: 7, r: 11}, {c: 7, r: 10}, {c: 6, r: 9}, {c: 5, r: 9}, {c: 4, r: 9}, {c: 3, r: 9}, {c: 2, r: 9}, {c: 1, r: 9}, {c: 1, r: 8}, {c: 1, r: 7}, {c: 2, r: 7}, {c: 3, r: 7}, {c: 4, r: 7}, {c: 5, r: 7}, {c: 6, r: 7}, {c: 7, r: 6}, {c: 7, r: 5}, {c: 7, r: 4}, {c: 7, r: 3}, {c: 7, r: 2}, {c: 7, r: 1}, {c: 8, r: 1}, {c: 9, r: 1}, {c: 9, r: 2}, {c: 9, r: 3}, {c: 9, r: 4}, {c: 9, r: 5}, {c: 9, r: 6}, {c: 10, r: 7}, {c: 11, r: 7}, {c: 12, r: 7}, {c: 13, r: 7}, {c: 14, r: 7}, {c: 15, r: 7}, {c: 15, r: 8}, {c: 14, r: 8}, {c: 13, r: 8}, {c: 12, r: 8}, {c: 11, r: 8}, {c: 10, r: 8}, {c: 9, r: 8}];
@@ -33,54 +36,40 @@ const NOMBRES = ['Rojo', 'Verde', 'Amarillo', 'Azul'];
 const COLORES = ['red', 'green', 'yellow', 'blue'];
 
 // ============================================
-// ESCUCHAR A FIREBASE (El Cerebro)
+// ESCUCHAR A FIREBASE
 // ============================================
 
-// Creamos una función que insiste hasta conectarse
 function conectarConFirebase() {
-    // 1. Preguntamos: ¿Firebase ya cargó?
     if (!window.onValue || !window.db) {
-        // Si NO ha cargado, esperamos 100ms y volvemos a intentar
-        console.log("Esperando a Firebase...");
         setTimeout(conectarConFirebase, 100);
         return;
     }
 
-    // 2. Si YA cargó, activamos la escucha (Sin el if de antes)
-    console.log("¡Conectado exitosamente!");
-    
     window.onValue(window.ref(window.db, 'partida/'), (snapshot) => {
         const data = snapshot.val();
 
-        // 1. Si no hay datos, mostrar menú inicio
         if (!data) {
             document.getElementById('start-screen').style.display = 'flex';
             document.getElementById('tokens-container').innerHTML = ''; 
             return;
         }
 
-        // 2. Si hay datos, ocultar menú
         document.getElementById('start-screen').style.display = 'none';
 
-        // 3. Sincronizar Variables
         gameState.turnoActual = data.turnoActual;
         gameState.fase = data.fase;
         gameState.totalJugadores = data.totalJugadores;
         gameState.pasosPendientes = data.pasosPendientes;
         gameState.ultimoValorDado = data.ultimoValorDado;
 
-        // 4. GENERAR FICHAS SI NO EXISTEN
         const container = document.getElementById('tokens-container');
         if (container.children.length === 0) {
             iniciarTableroLocal(data.totalJugadores);
         }
 
-        // 5. Mover fichas visualmente
         if (data.jugadores) {
             data.jugadores.forEach((jData, jIdx) => {
-                // Validación extra por si acaso
                 if (!jData.fichas) return;
-
                 jData.fichas.forEach((fData, fIdx) => {
                     const div = document.getElementById(`token-${jIdx}-${fIdx}`);
                     if(div) {
@@ -89,7 +78,6 @@ function conectarConFirebase() {
                             : RUTAS_JUGADORES[jIdx][fData.posIndex];
                         moverFichaCSS(div, coord.c, coord.r);
                         
-                        // Sincronizar memoria local
                         if(gameState.jugadores[jIdx] && gameState.jugadores[jIdx].fichas[fIdx]) {
                             gameState.jugadores[jIdx].fichas[fIdx].posIndex = fData.posIndex;
                         }
@@ -98,57 +86,55 @@ function conectarConFirebase() {
             });
         }
 
-        // 6. Actualizar UI
         actualizarInterfazGlobal();
 
-        // 7. Iluminar si toca seleccionar
         if (gameState.fase === 'SELECCIONANDO') {
             iluminarFichasMovibles();
         }
     });
 }
 
-// Iniciamos el proceso de conexión
-conectarConFirebase();
-
-
 // ============================================
 // LÓGICA LOCAL
 // ============================================
 
-// ESTA FUNCIÓN ES LA QUE CREA LOS DIVS DE COLORES
 function iniciarTableroLocal(numJugadores) {
     gameState.totalJugadores = numJugadores;
     const container = document.getElementById('tokens-container');
     container.innerHTML = ''; 
 
-    gameState.jugadores = []; // Reiniciar memoria local
+    gameState.jugadores = []; 
 
     for (let i = 0; i < numJugadores; i++) {
         let fichasLocales = [];
-        
         for (let f = 0; f < 4; f++) {
-            // Crear DIV
             const div = document.createElement('div');
             div.id = `token-${i}-${f}`;
             div.className = `token ${COLORES[i]}`;
             div.onclick = () => intentarMoverFicha(i, f);
-            
             container.appendChild(div);
-            
-            // Guardar en memoria
             fichasLocales.push({ id: f, posIndex: -1 });
         }
-
         gameState.jugadores.push({
-            id: i,
-            nombre: NOMBRES[i],
-            color: COLORES[i],
-            ruta: RUTAS_JUGADORES[i],
-            fichas: fichasLocales
+            id: i, nombre: NOMBRES[i], color: COLORES[i],
+            ruta: RUTAS_JUGADORES[i], fichas: fichasLocales
         });
     }
 }
+
+// --- FUNCIÓN DE IDENTIDAD ---
+// Esta función se llama desde los botones de colores de abajo
+window.elegirIdentidad = function(id) {
+    miIdentidad = id;
+    const nombre = NOMBRES[id] || "Espectador";
+    document.getElementById('my-identity-display').innerText = `Juegas como: ${nombre}`;
+    
+    // Iluminar botón seleccionado
+    document.querySelectorAll('.btn-id').forEach((btn, idx) => {
+        if(idx === id) btn.classList.add('active');
+        else btn.classList.remove('active');
+    });
+};
 
 function actualizarInterfazGlobal() {
     const j = gameState.jugadores[gameState.turnoActual];
@@ -163,17 +149,30 @@ function actualizarInterfazGlobal() {
     const msg = document.getElementById('game-msg');
     const btnText = document.getElementById('btn-text');
 
-    if (gameState.fase === 'ESPERANDO') {
-        msg.innerText = "¡Espera tu turno o Gira!";
-        btnText.innerText = (gameState.modoTiro === 'NORMAL') ? "GIRAR SLOT" : "¡DADO EXTRA!";
-        btnText.style.color = (gameState.modoTiro === 'NORMAL') ? "gold" : "cyan";
-    } else if (gameState.fase === 'SELECCIONANDO') {
-        msg.innerText = "👈 ¡Elige una ficha iluminada!";
+    // Mensaje personalizado según si es mi turno o no
+    if (miIdentidad === gameState.turnoActual) {
+        if (gameState.fase === 'ESPERANDO') {
+            msg.innerText = (gameState.modoTiro === 'NORMAL') ? "¡TU TURNO! Gira el Slot." : "¡DADO EXTRA! Tira de nuevo.";
+            btnText.innerText = (gameState.modoTiro === 'NORMAL') ? "GIRAR SLOT" : "¡DADO EXTRA!";
+            btnText.style.color = (gameState.modoTiro === 'NORMAL') ? "gold" : "cyan";
+        } else if (gameState.fase === 'SELECCIONANDO') {
+            msg.innerText = "👈 ¡Elige una ficha iluminada!";
+        } else {
+            msg.innerText = "🎲 Girando...";
+        }
+    } else {
+        // Si no es mi turno
+        msg.innerText = `Esperando al jugador ${j.nombre}...`;
+        btnText.innerText = "ESPERANDO...";
+        btnText.style.color = "#777";
     }
 }
 
 function iluminarFichasMovibles() {
     document.querySelectorAll('.token').forEach(t => t.classList.remove('selectable'));
+
+    // Solo ilumino si es MI turno
+    if (miIdentidad !== gameState.turnoActual) return;
 
     const jugador = gameState.jugadores[gameState.turnoActual];
     const pasos = gameState.pasosPendientes;
@@ -197,17 +196,14 @@ function iluminarFichasMovibles() {
 
     if (!hayMovimientos) {
         document.getElementById('game-msg').innerText = "🚫 Sin movimientos. Pasando turno...";
-        // Solo quien tenga el turno ejecuta el pase (para evitar duplicados)
-        // En local todos son "dueños", así que usamos un timeout simple
         setTimeout(() => {
-            // Verificamos si seguimos en la misma fase para no enviar doble
-            if (gameState.fase === 'SELECCIONANDO') pasarTurnoEnNube();
+            if (gameState.fase === 'SELECCIONANDO' && miIdentidad === gameState.turnoActual) pasarTurnoEnNube();
         }, 2000);
     }
 }
 
 // ============================================
-// ACCIONES (ENVÍAN A FIREBASE)
+// ACCIONES (CON SEGURIDAD DE IDENTIDAD)
 // ============================================
 
 window.iniciarJuego = function(num) {
@@ -217,7 +213,7 @@ window.iniciarJuego = function(num) {
             fichas: [{posIndex: -1}, {posIndex: -1}, {posIndex: -1}, {posIndex: -1}]
         });
     }
-
+    // Al crear partida, el creador suele ser el rojo (0) por defecto, pero dejémoslo que elija.
     window.set(window.ref(window.db, 'partida/'), {
         totalJugadores: num,
         turnoActual: 0,
@@ -229,11 +225,28 @@ window.iniciarJuego = function(num) {
     });
 };
 
+window.reiniciarPartida = function() {
+    if (confirm("¿Seguro que quieres reiniciar la partida para TODOS?")) {
+        // Borramos los datos en Firebase
+        window.set(window.ref(window.db, 'partida/'), null);
+        window.location.reload(); // Recargamos para limpiar memoria local
+    }
+};
+
 window.accionPrincipal = function() {
+    // 1. Verificar si es mi turno
+    if (miIdentidad === null) {
+        alert("⚠️ Primero selecciona quién eres en los botones de abajo (🔴 🟢 🟡 🔵).");
+        return;
+    }
+    if (miIdentidad !== gameState.turnoActual) {
+        alert("🚫 ¡No es tu turno! Espera.");
+        return;
+    }
     if (gameState.fase !== 'ESPERANDO') return;
     
     // Animación local
-    gameState.fase = 'GIRANDO'; // Bloqueo temporal local
+    gameState.fase = 'GIRANDO'; 
     document.getElementById('dice-img').classList.add('rolling');
     
     let iter = 0;
@@ -276,8 +289,10 @@ function finalizarTiro() {
 }
 
 function intentarMoverFicha(jIdx, fIdx) {
+    // Seguridad: Solo el dueño de la ficha puede mover
+    if (miIdentidad !== jIdx) return; 
+    if (miIdentidad !== gameState.turnoActual) return;
     if (gameState.fase !== 'SELECCIONANDO') return;
-    if (jIdx !== gameState.turnoActual) return;
 
     const div = document.getElementById(`token-${jIdx}-${fIdx}`);
     if (!div.classList.contains('selectable')) return;
@@ -305,7 +320,7 @@ function intentarMoverFicha(jIdx, fIdx) {
 }
 
 // ============================================
-// UTILIDADES
+// UTILS
 // ============================================
 
 function pasarTurnoEnNube() {
@@ -350,8 +365,10 @@ function calcularBonus(n1, n2, n3) {
 function rndArr(a) { return a[Math.floor(Math.random()*a.length)]; }
 function moverFichaCSS(el, c, r) { el.style.gridColumnStart = c; el.style.gridRowStart = r; }
 function getHexColor(n) { const m={'red':'#e74c3c','green':'#2ecc71','yellow':'#f1c40f','blue':'#3498db'}; return m[n]||'#fff'; }
-function amITheCurrentPlayer() { return true; } // Por ahora todos pueden mover
+function amITheCurrentPlayer() { return miIdentidad === gameState.turnoActual; }
 
-// Exponer globales
 window.toggleRules = toggleRules;
 window.accionPrincipal = accionPrincipal;
+
+// Encender motor
+conectarConFirebase();

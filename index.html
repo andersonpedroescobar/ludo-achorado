@@ -51,13 +51,18 @@
         <!-- SECCIÓN DE CONTROLES -->
         <div class="controls-area">
             
-            <!-- CABECERA CON BOTÓN INFO -->
+            <!-- CABECERA -->
             <div class="controls-header">
                 <h2 id="turn-indicator">Turno: ...</h2>
-                <button class="btn-info" onclick="toggleRules()">ℹ</button>
+                <div style="display:flex; gap:5px;">
+                    <!-- Botón Reiniciar -->
+                    <button class="btn-reset" onclick="reiniciarPartida()" title="Reiniciar Partida">↻</button>
+                    <!-- Botón Info -->
+                    <button class="btn-info" onclick="toggleRules()">ℹ</button>
+                </div>
             </div>
 
-            <!-- MODAL DE REGLAS (OCULTO POR DEFECTO) -->
+            <!-- MODAL DE REGLAS -->
             <div id="rules-modal" class="rules-modal" style="display: none;">
                 <h3>📜 Reglas del Slot</h3>
                 <ul>
@@ -91,6 +96,18 @@
             
             <div class="dice-area">
                 <img src="img/dado1.jpg" id="dice-img" alt="Dado">
+            </div>
+
+            <!-- NUEVO: SELECTOR DE IDENTIDAD -->
+            <div class="identity-box">
+                <p style="margin:5px 0; font-size:0.8rem; color:#aaa;">¿Quién eres tú?</p>
+                <div class="identity-buttons">
+                    <button class="btn-id red" onclick="elegirIdentidad(0)">🔴</button>
+                    <button class="btn-id green" onclick="elegirIdentidad(1)">🟢</button>
+                    <button class="btn-id yellow" onclick="elegirIdentidad(2)">🟡</button>
+                    <button class="btn-id blue" onclick="elegirIdentidad(3)">🔵</button>
+                </div>
+                <div id="my-identity-display" style="font-size:0.8rem; margin-top:5px; color:#fff;">Espectador</div>
             </div>
         </div>
     </div>
