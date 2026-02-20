@@ -125,26 +125,27 @@ function actualizarInterfazGlobal() {
     const j = gameState.jugadores[gameState.turnoActual];
     if(!j) return;
 
-    // 1. Actualizar textos básicos y dado
+    // Actualizar Texto del Turno
     const ind = document.getElementById('turn-indicator');
     ind.innerText = `Turno: ${j.nombre}`;
     ind.style.color = getHexColor(j.color);
+
+    // Actualizar Contador Global
     document.getElementById('global-turn-count').innerText = gameState.turnosGlobales;
+
     document.getElementById('dice-img').src = `img/dado${gameState.ultimoValorDado}.jpg`;
 
     const msg = document.getElementById('game-msg');
     const btnText = document.getElementById('btn-text');
 
-    // 2. IMPORTANTE: Ocultar los modales de ataque por defecto para limpiar la pantalla
-    // Si luego detectamos la fase correcta, los volvemos a mostrar abajo.
+    // Ocultar modales por defecto
     const fireModal = document.getElementById('fire-selection-modal');
     const iceModal = document.getElementById('ice-selection-modal');
     if(fireModal) fireModal.style.display = 'none';
     if(iceModal) iceModal.style.display = 'none';
 
-    // 3. Lógica según si es MI turno o no
+    // --- LÓGICA DE MENSAJES ---
     if (miIdentidad === gameState.turnoActual) {
-        // --- ES MI TURNO ---
         if (gameState.fase === 'ESPERANDO') {
             msg.innerText = (gameState.modoTiro === 'NORMAL') ? "¡TU TURNO!" : "¡DADO EXTRA!";
             btnText.innerText = (gameState.modoTiro === 'NORMAL') ? "GIRAR SLOT" : "¡DADO EXTRA!";
@@ -153,13 +154,14 @@ function actualizarInterfazGlobal() {
         else if (gameState.fase === 'SELECCIONANDO') {
             msg.innerText = "👈 ¡Elige ficha!";
         } 
+        else if (gameState.fase === 'BLOQUEADO') {
+            msg.innerText = "🚫 No tienes movimientos posibles."; // <--- MENSAJE CORREGIDO
+        }
         else if (gameState.fase === 'SELECCIONANDO_FUEGO') {
-            // Mostrar menú de Fuego
             if(fireModal) fireModal.style.display = 'flex';
             msg.innerText = "🔥 ¡Elige una víctima!";
         } 
         else if (gameState.fase === 'SELECCIONANDO_HIELO') {
-            // Mostrar menú de Hielo
             if(iceModal) iceModal.style.display = 'flex';
             msg.innerText = "❄️ ¡Elige a quién congelar!";
         } 
@@ -167,22 +169,16 @@ function actualizarInterfazGlobal() {
             msg.innerText = "🎲 Girando...";
         }
     } else {
-        // --- NO ES MI TURNO (VISIÓN DE ESPECTADOR) ---
-        btnText.innerText = "ESPERANDO...";
-        btnText.style.color = "#777";
-
-        if (gameState.fase === 'SELECCIONANDO_FUEGO') {
-            msg.innerText = `🔥 ${j.nombre} prepara FUEGO...`;
-        } 
-        else if (gameState.fase === 'SELECCIONANDO_HIELO') {
-            msg.innerText = `❄️ ${j.nombre} prepara HIELO...`;
-        } 
-        else {
+        // Espectador
+        if (gameState.fase === 'BLOQUEADO') {
+            msg.innerText = `🚫 ${j.nombre} no puede mover.`;
+        } else {
             msg.innerText = `Esperando a ${j.nombre}...`;
         }
+        btnText.innerText = "ESPERANDO...";
+        btnText.style.color = "#777";
     }
 }
-
 
 function dibujarRegalos() {
     const layer = document.getElementById('gifts-container');
@@ -318,14 +314,17 @@ window.accionPrincipal = function() {
 
 function finalizarTiro() {
     document.getElementById('dice-img').classList.remove('rolling');
+    
     let bonus = 0, s1=1, s2=1, s3=1;
     if (gameState.modoTiro === 'NORMAL') {
         s1 = rndArr(opcionesSlot); s2 = rndArr(opcionesSlot); s3 = rndArr(opcionesSlot);
         bonus = calcularBonus(s1, s2, s3);
     }
+
     const dado = Math.floor(Math.random() * 6) + 1;
     const total = bonus + dado;
 
+    // Mostrar visualmente
     document.getElementById('reel1').innerText = s1;
     document.getElementById('reel2').innerText = s2;
     document.getElementById('reel3').innerText = s3;
@@ -334,11 +333,42 @@ function finalizarTiro() {
 
     if (dado === 6) mostrarModal('chikawa-modal');
 
-    window.update(window.ref(window.db, 'partida/'), {
-        ultimoValorDado: dado,
-        pasosPendientes: total,
-        fase: 'SELECCIONANDO'
+    // --- CORRECCIÓN AQUÍ: VERIFICAR SI PUEDE MOVER ANTES DE CAMBIAR FASE ---
+    const jugador = gameState.jugadores[gameState.turnoActual];
+    let puedeMoverAlguien = false;
+
+    jugador.fichas.forEach(ficha => {
+        // Regla: Salir de casa (Solo con 6 en dado)
+        if (ficha.posIndex === -1) {
+            if (dado === 6) puedeMoverAlguien = true;
+        } 
+        // Regla: Mover en tablero (Si no se pasa de la meta)
+        else {
+            if (ficha.posIndex + total < jugador.ruta.length) {
+                puedeMoverAlguien = true;
+            }
+        }
     });
+
+    const updates = {};
+    updates['partida/ultimoValorDado'] = dado;
+    updates['partida/pasosPendientes'] = total;
+
+    if (puedeMoverAlguien) {
+        // Si puede mover, lo mandamos a seleccionar
+        updates['partida/fase'] = 'SELECCIONANDO';
+        window.update(window.ref(window.db), updates);
+    } else {
+        // SI NO PUEDE MOVER (El caso de tu error)
+        // 1. Mostramos el dado en la nube pero NO cambiamos a seleccionando
+        updates['partida/fase'] = 'BLOQUEADO'; // Estado temporal
+        window.update(window.ref(window.db), updates);
+
+        // 2. Forzamos el paso de turno tras 2 segundos
+        setTimeout(() => {
+            pasarTurnoEnNube();
+        }, 2000);
+    }
 }
 
 function intentarMoverFicha(jIdx, fIdx) {
