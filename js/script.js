@@ -226,17 +226,19 @@ function iluminarFichasMovibles() {
 // ============================================
 
 function pasarTurnoEnNube() {
-    const sigTurno = (gameState.turnoActual + 1) % gameState.totalJugadores;
+    const updates = {};
+    
+    // --- CAMBIO AQUÍ: USAR LA LÓGICA DE HIELO ---
+    const sigTurno = calcularSiguienteJugadorReal(updates);
+    
     const nuevosTurnosGlobales = (gameState.turnosGlobales || 0) + 1;
     
-    const updates = {};
     updates['partida/turnoActual'] = sigTurno;
     updates['partida/turnosGlobales'] = nuevosTurnosGlobales;
     updates['partida/fase'] = 'ESPERANDO';
     updates['partida/modoTiro'] = 'NORMAL';
     updates['partida/pasosPendientes'] = 0;
 
-    // Regenerar regalos cada 10 turnos
     if (nuevosTurnosGlobales % 10 === 0) {
         updates['partida/regalos'] = generarNuevosRegalos();
     }
@@ -246,18 +248,20 @@ function pasarTurnoEnNube() {
 
 function decidirSiguienteTurno(updates) {
     if (gameState.ultimoValorDado === 6) {
+        // Si sacó 6, repite turno (ignora hielo)
         updates['partida/fase'] = 'ESPERANDO';
         updates['partida/modoTiro'] = 'EXTRA';
     } else {
-        const sigTurno = (gameState.turnoActual + 1) % gameState.totalJugadores;
-        const nuevosTurnos = (gameState.turnosGlobales || 0) + 1;
+        // --- CAMBIO AQUÍ: USAR LA LÓGICA DE HIELO ---
+        const sigTurno = calcularSiguienteJugadorReal(updates);
         
-        updates['partida/turnosGlobales'] = nuevosTurnos;
+        updates['partida/turnosGlobales'] = (gameState.turnosGlobales || 0) + 1;
         updates['partida/turnoActual'] = sigTurno;
         updates['partida/fase'] = 'ESPERANDO';
         updates['partida/modoTiro'] = 'NORMAL';
 
-        if (nuevosTurnos % 10 === 0) {
+        // Regenerar regalos si toca
+        if (((gameState.turnosGlobales || 0) + 1) % 10 === 0) {
             updates['partida/regalos'] = generarNuevosRegalos();
         }
     }
@@ -595,6 +599,36 @@ function mostrarPoderObtenido(tipo) {
     document.getElementById('power-title').innerText = tipo;
     document.getElementById('power-desc').innerText = "¡Poder activado!";
     mostrarModal('power-modal');
+}
+
+// --- LÓGICA DE SALTO DE TURNO (HIELO) ---
+function calcularSiguienteJugadorReal(updates) {
+    let candidato = (gameState.turnoActual + 1) % gameState.totalJugadores;
+    let intentos = 0;
+
+    // Buscamos al siguiente jugador libre (máximo una vuelta completa)
+    while (intentos < gameState.totalJugadores) {
+        const sancionesActuales = gameState.jugadores[candidato].sanciones || 0;
+
+        if (sancionesActuales > 0) {
+            // ESTÁ CONGELADO:
+            // 1. Reducimos su sanción en la base de datos
+            updates[`partida/jugadores/${candidato}/sanciones`] = sancionesActuales - 1;
+            
+            // 2. Avisamos visualmente (opcional, console log)
+            console.log(`Jugador ${candidato} saltado por hielo. Le quedan ${sancionesActuales - 1}`);
+
+            // 3. Saltamos al siguiente
+            candidato = (candidato + 1) % gameState.totalJugadores;
+            intentos++;
+        } else {
+            // ESTÁ LIBRE: Es su turno
+            return candidato;
+        }
+    }
+    
+    // Si todos estuvieran congelados (raro), le toca al siguiente inmediato
+    return (gameState.turnoActual + 1) % gameState.totalJugadores;
 }
 
 window.elegirIdentidad = (id) => {
