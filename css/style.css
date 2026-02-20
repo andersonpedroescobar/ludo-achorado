@@ -353,3 +353,31 @@ body {
 .btn-fire.green { background: #27ae60; }
 .btn-fire.yellow { background: #f1c40f; color: black; text-shadow: none; }
 .btn-fire.blue { background: #2980b9; }
+
+
+/* ESTILOS BOTONES DE HIELO */
+.btn-ice {
+    padding: 20px;
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: #333;
+    border: 3px solid cyan;
+    border-radius: 10px;
+    cursor: pointer;
+    text-transform: uppercase;
+    transition: transform 0.2s, box-shadow 0.2s;
+    background: #e0f7fa; /* Fondo clarito hielo */
+    box-shadow: 0 0 10px cyan;
+}
+
+.btn-ice:hover {
+    transform: scale(1.05);
+    background: cyan;
+    box-shadow: 0 0 20px white;
+}
+
+/* Colores de texto para diferenciar */
+.btn-ice.red { color: #c0392b; }
+.btn-ice.green { color: #27ae60; }
+.btn-ice.yellow { color: #f1c40f; text-shadow: 1px 1px 0 black; }
+.btn-ice.blue { color: #2980b9; }

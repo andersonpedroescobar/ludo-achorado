@@ -125,6 +125,7 @@ function actualizarInterfazGlobal() {
     const j = gameState.jugadores[gameState.turnoActual];
     if(!j) return;
 
+    // 1. Actualizar textos básicos y dado
     const ind = document.getElementById('turn-indicator');
     ind.innerText = `Turno: ${j.nombre}`;
     ind.style.color = getHexColor(j.color);
@@ -134,32 +135,54 @@ function actualizarInterfazGlobal() {
     const msg = document.getElementById('game-msg');
     const btnText = document.getElementById('btn-text');
 
+    // 2. IMPORTANTE: Ocultar los modales de ataque por defecto para limpiar la pantalla
+    // Si luego detectamos la fase correcta, los volvemos a mostrar abajo.
+    const fireModal = document.getElementById('fire-selection-modal');
+    const iceModal = document.getElementById('ice-selection-modal');
+    if(fireModal) fireModal.style.display = 'none';
+    if(iceModal) iceModal.style.display = 'none';
+
+    // 3. Lógica según si es MI turno o no
     if (miIdentidad === gameState.turnoActual) {
+        // --- ES MI TURNO ---
         if (gameState.fase === 'ESPERANDO') {
-            // ... (código igual) ...
-        } else if (gameState.fase === 'SELECCIONANDO') {
+            msg.innerText = (gameState.modoTiro === 'NORMAL') ? "¡TU TURNO!" : "¡DADO EXTRA!";
+            btnText.innerText = (gameState.modoTiro === 'NORMAL') ? "GIRAR SLOT" : "¡DADO EXTRA!";
+            btnText.style.color = (gameState.modoTiro === 'NORMAL') ? "gold" : "cyan";
+        } 
+        else if (gameState.fase === 'SELECCIONANDO') {
             msg.innerText = "👈 ¡Elige ficha!";
-        } else if (gameState.fase === 'SELECCIONANDO_FUEGO') {
-            // MOSTRAR MODAL DE FUEGO SOLO A MÍ
-            document.getElementById('fire-selection-modal').style.display = 'flex';
+        } 
+        else if (gameState.fase === 'SELECCIONANDO_FUEGO') {
+            // Mostrar menú de Fuego
+            if(fireModal) fireModal.style.display = 'flex';
             msg.innerText = "🔥 ¡Elige una víctima!";
-        } else {
+        } 
+        else if (gameState.fase === 'SELECCIONANDO_HIELO') {
+            // Mostrar menú de Hielo
+            if(iceModal) iceModal.style.display = 'flex';
+            msg.innerText = "❄️ ¡Elige a quién congelar!";
+        } 
+        else {
             msg.innerText = "🎲 Girando...";
         }
     } else {
-        // SI NO ES MI TURNO, OCULTAR MODAL DE FUEGO
-        document.getElementById('fire-selection-modal').style.display = 'none';
-        
+        // --- NO ES MI TURNO (VISIÓN DE ESPECTADOR) ---
+        btnText.innerText = "ESPERANDO...";
+        btnText.style.color = "#777";
+
         if (gameState.fase === 'SELECCIONANDO_FUEGO') {
-            msg.innerText = `🔥 ${j.nombre} está eligiendo qué quemar...`;
-        } else {
+            msg.innerText = `🔥 ${j.nombre} prepara FUEGO...`;
+        } 
+        else if (gameState.fase === 'SELECCIONANDO_HIELO') {
+            msg.innerText = `❄️ ${j.nombre} prepara HIELO...`;
+        } 
+        else {
             msg.innerText = `Esperando a ${j.nombre}...`;
-            btnText.innerText = "ESPERANDO...";
-            btnText.style.color = "#777";
         }
-        
     }
 }
+
 
 function dibujarRegalos() {
     const layer = document.getElementById('gifts-container');
@@ -362,64 +385,149 @@ function ejecutarPoder(tipo, updates) {
     if (tipo === 'EXTRA') {
         updates['partida/fase'] = 'ESPERANDO';
         updates['partida/modoTiro'] = 'NORMAL'; 
-        return; // No pasamos turno, juega de nuevo
-    }
-
-    // 2. HIELO (Automático)
-    if (tipo === 'HIELO') {
-        // Congela al siguiente jugador
-        const sig = (gameState.turnoActual + 1) % gameState.totalJugadores;
-        updates[`partida/jugadores/${sig}/sanciones`] = 2;
-        decidirSiguienteTurno(updates); // Pasa turno
         return;
     }
 
-    // 3. FUEGO (Manual - AQUÍ ESTÁ EL CAMBIO)
+    // 2. HIELO (Ahora pide selección MANUAL)
+    if (tipo === 'HIELO') {
+        updates['partida/fase'] = 'SELECCIONANDO_HIELO';
+        return;
+    }
+
+    // 3. FUEGO (Manual)
     if (tipo === 'FUEGO') {
-        // No matamos aquí. Cambiamos la fase para que el jugador elija.
         updates['partida/fase'] = 'SELECCIONANDO_FUEGO';
-        // IMPORTANTE: No llamamos a decidirSiguienteTurno todavía.
         return; 
     }
     
-    // Fallback por si acaso
     decidirSiguienteTurno(updates);
 }
 
-// Función llamada desde los botones del modal de fuego
-window.aplicarFuego = function(colorIndexVictima) {
-    // Validar seguridad
+// ============================================
+// FUNCIONES DE PODERES (FUEGO Y HIELO)
+// ============================================
+
+// Función para aplicar FUEGO (Por Zonas Geográficas + Inmunidad Propia)
+window.aplicarFuego = function(zonaIndex) {
     if (miIdentidad !== gameState.turnoActual) return;
 
     const updates = {};
-    let muertes = 0;
+    let enemigosQuemados = 0;
 
-    // Buscar al jugador de ese color
-    const victima = gameState.jugadores[colorIndexVictima];
+    // Definir los límites de las 4 zonas del tablero (15x15)
+    // Zona 0 (Roja/Arr-Izq): Filas 1-7, Columnas 1-7
+    // Zona 1 (Verde/Arr-Der): Filas 1-7, Columnas 9-15
+    // Zona 2 (Amarilla/Abj-Der): Filas 9-15, Columnas 9-15
+    // Zona 3 (Azul/Abj-Izq): Filas 9-15, Columnas 1-7
+    
+    const estaEnZona = (c, r, z) => {
+        if (z === 0) return r <= 7 && c <= 7;
+        if (z === 1) return r <= 7 && c >= 9;
+        if (z === 2) return r >= 9 && c >= 9;
+        if (z === 3) return r >= 9 && c <= 7;
+        return false;
+    };
 
-    // Recorrer sus fichas
-    victima.fichas.forEach((ficha, fIdx) => {
-        // Solo matamos si la ficha ha salido de casa (posIndex > -1)
-        // y no está ya en la meta final (opcional, pero cruel si lo matas en la meta)
-        if (ficha.posIndex > -1 && ficha.posIndex < 50) {
-            updates[`partida/jugadores/${colorIndexVictima}/fichas/${fIdx}/posIndex`] = -1;
-            muertes++;
-        }
+    // Recorrer TODOS los jugadores para ver quién está en esa zona
+    gameState.jugadores.forEach((jugador, jIdx) => {
+        jugador.fichas.forEach((ficha, fIdx) => {
+            // Ignorar fichas en casa (-1)
+            if (ficha.posIndex === -1) return;
+
+            // Obtener coordenada actual de la ficha
+            const coord = jugador.ruta[ficha.posIndex];
+
+            // 1. Verificar si la ficha está físicamente en la zona de fuego
+            if (estaEnZona(coord.c, coord.r, zonaIndex)) {
+                
+                // 2. REGLA DE ORO: Si la ficha es MÍA, no se quema.
+                if (jIdx === gameState.turnoActual) {
+                    console.log(`¡Mi ficha ${fIdx} sobrevivió al fuego en mi zona!`);
+                    return; 
+                }
+
+                // 3. Si es de otro, se quema (vuelve a casa -1)
+                updates[`partida/jugadores/${jIdx}/fichas/${fIdx}/posIndex`] = -1;
+                enemigosQuemados++;
+            }
+        });
     });
 
-    if (muertes > 0) {
-        alert(`🔥 ¡Has quemado ${muertes} fichas del equipo ${NOMBRES[colorIndexVictima]}!`);
+    if (enemigosQuemados > 0) {
+        alert(`🔥 ¡Fuego en zona ${NOMBRES[zonaIndex]}! Se quemaron ${enemigosQuemados} enemigos.`);
     } else {
-        alert(`🔥 Zona ${NOMBRES[colorIndexVictima]} quemada, pero no había nadie.`);
+        alert(`🔥 Fuego lanzado en zona ${NOMBRES[zonaIndex]}, pero no había enemigos.`);
+    }
+    
+    // Cerrar modal y pasar turno
+    document.getElementById('fire-selection-modal').style.display = 'none';
+    
+    // Decidir siguiente turno (función existente en tu código)
+    // Nota: Como es una función interna, necesitamos asegurarnos de pasarle updates
+    // Si 'decidirSiguienteTurno' no es global, copiamos su lógica básica aquí para asegurar el pase:
+    
+    if (gameState.ultimoValorDado === 6) {
+        updates['partida/fase'] = 'ESPERANDO';
+        updates['partida/modoTiro'] = 'EXTRA';
+    } else {
+        const sig = (gameState.turnoActual + 1) % gameState.totalJugadores;
+        updates['partida/turnosGlobales'] = (gameState.turnosGlobales || 0) + 1;
+        updates['partida/turnoActual'] = sig;
+        updates['partida/fase'] = 'ESPERANDO';
+        updates['partida/modoTiro'] = 'NORMAL';
+        
+        // Regenerar regalos si toca (múltiplo de 10)
+        if (((gameState.turnosGlobales || 0) + 1) % 10 === 0) {
+            updates['partida/regalos'] = generarNuevosRegalos();
+        }
+    }
+    updates['partida/pasosPendientes'] = 0;
+
+    window.update(window.ref(window.db), updates);
+};
+
+// Función para aplicar HIELO (Seleccionar víctima)
+window.aplicarHielo = function(victimaIndex) {
+    if (miIdentidad !== gameState.turnoActual) return;
+
+    // Evitar congelarse a uno mismo (opcional, pero recomendado para evitar misclicks)
+    if (victimaIndex === gameState.turnoActual) {
+        alert("🚫 No te congeles a ti mismo. Elige a un rival.");
+        return;
     }
 
-    // Cerrar modal visualmente
-    document.getElementById('fire-selection-modal').style.display = 'none';
+    // Verificar si el jugador existe (por si juegan solo 2 y clicas el botón del 3)
+    if (victimaIndex >= gameState.totalJugadores) {
+        alert("🚫 Ese jugador no está en la partida.");
+        return;
+    }
 
-    // Pasar turno en la base de datos
-    decidirSiguienteTurno(updates);
+    const updates = {};
     
-    // Enviar todo
+    // Aplicar sanción de 2 turnos perdidos
+    updates[`partida/jugadores/${victimaIndex}/sanciones`] = 2;
+
+    alert(`❄️ ¡Has congelado a ${NOMBRES[victimaIndex]}! Perderá sus próximos 2 turnos.`);
+
+    document.getElementById('ice-selection-modal').style.display = 'none';
+
+    // Pasar turno (Misma lógica de arriba para asegurar)
+    if (gameState.ultimoValorDado === 6) {
+        updates['partida/fase'] = 'ESPERANDO';
+        updates['partida/modoTiro'] = 'EXTRA';
+    } else {
+        const sig = (gameState.turnoActual + 1) % gameState.totalJugadores;
+        updates['partida/turnosGlobales'] = (gameState.turnosGlobales || 0) + 1;
+        updates['partida/turnoActual'] = sig;
+        updates['partida/fase'] = 'ESPERANDO';
+        updates['partida/modoTiro'] = 'NORMAL';
+        
+        if (((gameState.turnosGlobales || 0) + 1) % 10 === 0) {
+            updates['partida/regalos'] = generarNuevosRegalos();
+        }
+    }
+    updates['partida/pasosPendientes'] = 0;
+
     window.update(window.ref(window.db), updates);
 };
 
