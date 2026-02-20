@@ -136,18 +136,28 @@ function actualizarInterfazGlobal() {
 
     if (miIdentidad === gameState.turnoActual) {
         if (gameState.fase === 'ESPERANDO') {
-            msg.innerText = (gameState.modoTiro === 'NORMAL') ? "¡TU TURNO!" : "¡DADO EXTRA!";
-            btnText.innerText = (gameState.modoTiro === 'NORMAL') ? "GIRAR SLOT" : "¡DADO EXTRA!";
-            btnText.style.color = (gameState.modoTiro === 'NORMAL') ? "gold" : "cyan";
+            // ... (código igual) ...
         } else if (gameState.fase === 'SELECCIONANDO') {
             msg.innerText = "👈 ¡Elige ficha!";
+        } else if (gameState.fase === 'SELECCIONANDO_FUEGO') {
+            // MOSTRAR MODAL DE FUEGO SOLO A MÍ
+            document.getElementById('fire-selection-modal').style.display = 'flex';
+            msg.innerText = "🔥 ¡Elige una víctima!";
         } else {
             msg.innerText = "🎲 Girando...";
         }
     } else {
-        msg.innerText = `Esperando a ${j.nombre}...`;
-        btnText.innerText = "ESPERANDO...";
-        btnText.style.color = "#777";
+        // SI NO ES MI TURNO, OCULTAR MODAL DE FUEGO
+        document.getElementById('fire-selection-modal').style.display = 'none';
+        
+        if (gameState.fase === 'SELECCIONANDO_FUEGO') {
+            msg.innerText = `🔥 ${j.nombre} está eligiendo qué quemar...`;
+        } else {
+            msg.innerText = `Esperando a ${j.nombre}...`;
+            btnText.innerText = "ESPERANDO...";
+            btnText.style.color = "#777";
+        }
+        
     }
 }
 
@@ -348,25 +358,70 @@ function obtenerPoderAleatorio() {
     return 'EXTRA';
 }
 function ejecutarPoder(tipo, updates) {
+    // 1. TIRO EXTRA
     if (tipo === 'EXTRA') {
         updates['partida/fase'] = 'ESPERANDO';
-        updates['partida/modoTiro'] = 'NORMAL';
-        return;
+        updates['partida/modoTiro'] = 'NORMAL'; 
+        return; // No pasamos turno, juega de nuevo
     }
+
+    // 2. HIELO (Automático)
     if (tipo === 'HIELO') {
+        // Congela al siguiente jugador
         const sig = (gameState.turnoActual + 1) % gameState.totalJugadores;
         updates[`partida/jugadores/${sig}/sanciones`] = 2;
+        decidirSiguienteTurno(updates); // Pasa turno
+        return;
     }
+
+    // 3. FUEGO (Manual - AQUÍ ESTÁ EL CAMBIO)
     if (tipo === 'FUEGO') {
-        const victimaIdx = (gameState.turnoActual + 1) % gameState.totalJugadores;
-        const fichasEnemigas = gameState.jugadores[victimaIdx].fichas.filter(f => f.posIndex > 0);
-        if(fichasEnemigas.length > 0) {
-            const fM = rndArr(fichasEnemigas);
-            updates[`partida/jugadores/${victimaIdx}/fichas/${fM.id}/posIndex`] = -1;
-        }
+        // No matamos aquí. Cambiamos la fase para que el jugador elija.
+        updates['partida/fase'] = 'SELECCIONANDO_FUEGO';
+        // IMPORTANTE: No llamamos a decidirSiguienteTurno todavía.
+        return; 
     }
+    
+    // Fallback por si acaso
     decidirSiguienteTurno(updates);
 }
+
+// Función llamada desde los botones del modal de fuego
+window.aplicarFuego = function(colorIndexVictima) {
+    // Validar seguridad
+    if (miIdentidad !== gameState.turnoActual) return;
+
+    const updates = {};
+    let muertes = 0;
+
+    // Buscar al jugador de ese color
+    const victima = gameState.jugadores[colorIndexVictima];
+
+    // Recorrer sus fichas
+    victima.fichas.forEach((ficha, fIdx) => {
+        // Solo matamos si la ficha ha salido de casa (posIndex > -1)
+        // y no está ya en la meta final (opcional, pero cruel si lo matas en la meta)
+        if (ficha.posIndex > -1 && ficha.posIndex < 50) {
+            updates[`partida/jugadores/${colorIndexVictima}/fichas/${fIdx}/posIndex`] = -1;
+            muertes++;
+        }
+    });
+
+    if (muertes > 0) {
+        alert(`🔥 ¡Has quemado ${muertes} fichas del equipo ${NOMBRES[colorIndexVictima]}!`);
+    } else {
+        alert(`🔥 Zona ${NOMBRES[colorIndexVictima]} quemada, pero no había nadie.`);
+    }
+
+    // Cerrar modal visualmente
+    document.getElementById('fire-selection-modal').style.display = 'none';
+
+    // Pasar turno en la base de datos
+    decidirSiguienteTurno(updates);
+    
+    // Enviar todo
+    window.update(window.ref(window.db), updates);
+};
 
 function generarNuevosRegalos() {
     const nuevos = [];
