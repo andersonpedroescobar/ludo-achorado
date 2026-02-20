@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ludo Achorado v2</title>
+    <title>Ludo Achorado: Chaos Edition</title>
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 
-   <!-- PANTALLA DE INICIO (MODAL) -->
+   <!-- PANTALLA DE INICIO -->
     <div id="start-screen" class="modal-overlay">
         <div class="modal-content">
             <h1>🎲 LUDO ACHORADO 🎲</h1>
@@ -21,7 +21,7 @@
         </div>
     </div>
 
-    <!-- 👇 (NUEVO MODAL CHIKAWA) 👇 -->
+    <!-- MODAL CHIKAWA (6) -->
     <div id="chikawa-modal" class="chikawa-overlay" style="display: none;">
         <div class="chikawa-content">
             <img src="img/chikawa1.png" alt="¡Salió 6!" class="chikawa-anim">
@@ -29,40 +29,51 @@
             <p>¡Repites turno o sacas ficha!</p>
         </div>
     </div>
-    
+
+    <!-- MODAL PODER (REGALO) -->
+    <div id="power-modal" class="chikawa-overlay" style="display: none;">
+        <div class="chikawa-content">
+            <img src="img/chikawaregalo.png" alt="Regalo" class="chikawa-anim" style="width: 150px;">
+            <h2 id="power-title" style="color: #2ecc71;">¡PODER OBTENIDO!</h2>
+            <p id="power-desc" style="font-size: 1.2rem;">...</p>
+        </div>
+    </div>
 
     <div class="main-container">
         
-        <!-- AQUÍ ESTABA EL ERROR: Faltaba este div "board-area" -->
         <div class="board-area">
             <div class="board-wrapper">
-                <!-- Imagen de fondo -->
                 <img src="img/ludo.jpg" alt="Tablero Ludo" class="board-img">
                 
-                <!-- GRILLA DEL SISTEMA (Para fichas) -->
-                <!-- Esta clase "grid-system" es vital para que las fichas sean pequeñas -->
+                <!-- CAPA DE REGALOS -->
+                <div id="gifts-container" class="grid-system"></div>
+
+                <!-- CAPA DE FICHAS -->
                 <div id="tokens-container" class="grid-system"></div>
 
-                <!-- Capa para ver los cuadros amarillos (DEBUG) -->
-                <div id="grid-layer" class="grid-system grid-debug"></div>
+                <!-- EFECTOS VISUALES (FUEGO/HIELO) -->
+                <div id="fx-container" class="grid-system" style="pointer-events: none;"></div>
             </div>
         </div>
 
-        <!-- SECCIÓN DE CONTROLES -->
         <div class="controls-area">
             
-            <!-- CABECERA -->
             <div class="controls-header">
-                <h2 id="turn-indicator">Turno: ...</h2>
+                <div style="text-align: left;">
+                    <div style="font-size: 0.8rem; color: #aaa;">Turno Global</div>
+                    <div id="global-turn-count" style="font-size: 1.5rem; font-weight: bold;">0</div>
+                </div>
+                <h2 id="turn-indicator" style="font-size: 1.2rem;">...</h2>
                 <div style="display:flex; gap:5px;">
-                    <!-- Botón Reiniciar -->
-                    <button class="btn-reset" onclick="reiniciarPartida()" title="Reiniciar Partida">↻</button>
-                    <!-- Botón Info -->
-                    <button class="btn-info" onclick="toggleRules()">ℹ</button>
+                    <button class="btn-reset" onclick="reiniciarPartida()">↻</button>
+                    <!-- Botón Info Poderes -->
+                    <button class="btn-info power-info" onclick="togglePowerRules()">⚡</button>
+                    <!-- Botón Info Reglas -->
+                    <button class="btn-info" onclick="toggleRules()">📜</button>
                 </div>
             </div>
 
-            <!-- MODAL DE REGLAS -->
+            <!-- MODAL REGLAS SLOT -->
             <div id="rules-modal" class="rules-modal" style="display: none;">
                 <h3>📜 Reglas del Slot</h3>
                 <ul>
@@ -72,12 +83,22 @@
                     <li>tres <b>2</b> = +4 pasos</li>
                     <li>tres <b>7</b> = +7 pasos</li>
                     <li>Dado <b>6</b> = ¡Repite turno!</li>
-                    <li><b>Sacar ficha:</b> Solo con Dado 6</li>
                 </ul>
                 <button onclick="toggleRules()" class="btn-close-rules">Cerrar</button>
             </div>
+
+            <!-- MODAL INFO PODERES -->
+            <div id="power-rules-modal" class="rules-modal" style="display: none; top: 100px;">
+                <h3 style="color: #2ecc71;">⚡ Poderes (Regalos)</h3>
+                <ul>
+                    <li>🎁 Aparecen 3 cada 10 turnos.</li>
+                    <li>🔥 <b>Fuego:</b> Quema una zona del tablero (mata a todos ahí).</li>
+                    <li>❄️ <b>Congelar:</b> Un enemigo pierde 2 turnos.</li>
+                    <li>🎲 <b>Extra:</b> Tiras de nuevo al instante.</li>
+                </ul>
+                <button onclick="togglePowerRules()" class="btn-close-rules">Cerrar</button>
+            </div>
             
-            <!-- SLOT -->
             <div class="slot-machine-container" id="main-btn" onclick="accionPrincipal()">
                 <img src="img/chikawa_slots.png" alt="Slot" class="slot-img">
                 <div class="slot-display">
@@ -98,7 +119,6 @@
                 <img src="img/dado1.jpg" id="dice-img" alt="Dado">
             </div>
 
-            <!-- NUEVO: SELECTOR DE IDENTIDAD -->
             <div class="identity-box">
                 <p style="margin:5px 0; font-size:0.8rem; color:#aaa;">¿Quién eres tú?</p>
                 <div class="identity-buttons">
@@ -111,14 +131,13 @@
             </div>
         </div>
     </div>
-    
 
+    <!-- SCRIPT FIREBASE -->
     <script type="module">
-      // Importar las funciones que necesitas
       import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
       import { getDatabase, ref, set, onValue, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
-      // Tu configuración (ASEGÚRATE DE COPIAR EL QUE TE DIO FIREBASE)
+      // ⚠️⚠️⚠️ ¡PEGA AQUÍ TU CONFIGURACIÓN DE FIREBASE! ⚠️⚠️⚠️
       const firebaseConfig = {
          apiKey: "AIzaSyCGWY4IeNxX9ry33Ll6O8Jo3eayYTqh5xA",
          authDomain: "ludoachoradodb.firebaseapp.com",
@@ -128,24 +147,13 @@
          messagingSenderId: "938756448190",
          appId: "1:938756448190:web:e7b7fb6eb10640febb23ef",
          measurementId: "G-HHPG96CEX4"
-         };
+      };
 
-      // Inicializar Firebase
       const app = initializeApp(firebaseConfig);
       const db = getDatabase(app);
-
-      // HACER LA BASE DE DATOS GLOBAL PARA USARLA EN SCRIPT.JS
-      window.db = db;
-      window.ref = ref;
-      window.set = set;
-      window.onValue = onValue;
-      window.update = update;
-      
-      console.log("🔥 Base de datos conectada");
+      window.db = db; window.ref = ref; window.set = set; window.onValue = onValue; window.update = update;
     </script>
 
-
-    <!-- Agregamos type="module" para que espere al anterior -->
     <script type="module" src="js/script.js"></script>
 </body>
 </html>

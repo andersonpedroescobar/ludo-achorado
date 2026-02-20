@@ -1,3 +1,6 @@
+/* =========================================
+   1. CONFIGURACIÓN BÁSICA Y FONDO
+   ========================================= */
 body {
     font-family: 'Segoe UI', sans-serif;
     background-color: #2c3e50;
@@ -10,21 +13,41 @@ body {
     overflow: hidden;
 }
 
-/* MODAL DE INICIO (SELECCIÓN DE JUGADORES) */
-.modal-overlay {
+/* =========================================
+   2. MODALES (VENTANAS EMERGENTES)
+   ========================================= */
+.modal-overlay, .chikawa-overlay {
     position: fixed;
     top: 0; left: 0; width: 100%; height: 100%;
     background: rgba(0,0,0,0.95);
-    z-index: 2000;
+    z-index: 3000; /* Encima de todo */
     display: flex;
     justify-content: center;
     align-items: center;
+    animation: fadeIn 0.3s;
 }
-.modal-content {
-    background: #fff; color: #333;
-    padding: 40px; border-radius: 15px; text-align: center;
+
+.modal-content, .chikawa-content {
+    background: #fff;
+    color: #333;
+    padding: 40px;
+    border-radius: 15px;
+    text-align: center;
     box-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
 }
+
+/* Estilo específico para Chikawa y Poderes (Fondo transparente) */
+.chikawa-content {
+    background: transparent;
+    color: white;
+}
+
+.chikawa-anim {
+    width: 250px;
+    filter: drop-shadow(0 0 20px gold);
+    animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
 .player-buttons button {
     padding: 15px 30px; margin: 10px; cursor: pointer;
     background: #e74c3c; color: white; border: none; font-size: 1.2rem;
@@ -32,16 +55,17 @@ body {
 }
 .player-buttons button:hover { background: #c0392b; transform: scale(1.05); }
 
-/* CONTENEDOR PRINCIPAL */
+/* =========================================
+   3. TABLERO Y GRILLA
+   ========================================= */
 .main-container {
     display: flex;
     gap: 30px;
     align-items: flex-start;
 }
 
-/* --- TABLERO --- */
 .board-area {
-    width: 650px; 
+    width: 650px;
     height: 650px;
     min-width: 600px;
     position: relative;
@@ -65,7 +89,7 @@ body {
     z-index: 0;
 }
 
-/* --- CAPAS DE GRILLA --- */
+/* SISTEMA DE CAPAS (Z-INDEX) */
 .grid-system {
     position: absolute;
     top: 0; left: 0;
@@ -75,34 +99,31 @@ body {
     grid-template-rows: repeat(15, 1fr);
 }
 
-.grid-debug { z-index: 10; pointer-events: none; }
+#gifts-container { z-index: 15; pointer-events: none; } /* Regalos */
+#tokens-container { z-index: 20; pointer-events: none; } /* Fichas */
+#fx-container { z-index: 25; pointer-events: none; } /* Fuego/Hielo */
+.grid-debug { z-index: 50; pointer-events: none; }
 
-#tokens-container { 
-    z-index: 20; 
-    pointer-events: none; 
-}
-
-/* --- FICHAS --- */
+/* =========================================
+   4. ELEMENTOS DEL JUEGO (FICHAS Y REGALOS)
+   ========================================= */
 .token {
-    /* AJUSTE: Más pequeñas para que se vean bien las 4 */
-    width: 60%; 
+    width: 60%; /* Tamaño ajustado para que entren 4 */
     height: 60%;
     border-radius: 50%;
     border: 2px solid white;
     box-shadow: 2px 2px 4px rgba(0,0,0,0.6);
     
-    justify-self: center;
-    align-self: center;
-    
+    justify-self: center; align-self: center;
     position: relative;
     transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
     
-    pointer-events: auto;
+    pointer-events: auto; /* IMPORTANTE: Permitir clic */
     cursor: not-allowed;
     opacity: 0.9;
 }
 
-/* Estado seleccionable */
+/* Estado seleccionable (Tu turno) */
 .token.selectable {
     cursor: pointer;
     border-color: #f1c40f;
@@ -112,18 +133,42 @@ body {
     animation: bounce 1s infinite;
 }
 
-@keyframes bounce {
-    0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.2); }
-}
-
 /* Colores */
 .token.red { background: radial-gradient(circle at 30% 30%, #e74c3c, #922b21); }
 .token.green { background: radial-gradient(circle at 30% 30%, #2ecc71, #1e8449); }
 .token.yellow { background: radial-gradient(circle at 30% 30%, #f1c40f, #b7950b); }
 .token.blue { background: radial-gradient(circle at 30% 30%, #3498db, #21618c); }
 
-/* --- CONTROLES (Derecha) --- */
+/* --- REGALOS (CHIKAWA) --- */
+.gift {
+    width: 80%; height: 80%;
+    /* Nota: ../img porque el CSS está dentro de una carpeta */
+    background-image: url('../img/chikawaregalo.png');
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    justify-self: center; align-self: center;
+    animation: float 2s infinite ease-in-out;
+}
+
+/* --- EFECTOS VISUALES --- */
+/* Ficha Congelada */
+.ice-token {
+    filter: hue-rotate(180deg) brightness(1.5) !important;
+    border: 3px solid cyan !important;
+    box-shadow: 0 0 15px cyan !important;
+}
+
+/* Efecto Fuego */
+.fire-fx {
+    width: 100%; height: 100%;
+    background: radial-gradient(circle, rgba(231,76,60,0.8) 0%, rgba(192,57,43,0) 70%);
+    animation: burn 0.5s infinite alternate;
+}
+
+/* =========================================
+   5. PANEL DE CONTROLES (DERECHA)
+   ========================================= */
 .controls-area {
     width: 320px;
     background: #34495e;
@@ -132,10 +177,9 @@ body {
     text-align: center;
     box-shadow: 0 5px 15px rgba(0,0,0,0.3);
     border: 2px solid #455a64;
-    position: relative; /* Para posicionar el modal */
+    position: relative;
 }
 
-/* CABECERA CON BOTÓN INFO */
 .controls-header {
     display: flex;
     justify-content: space-between;
@@ -145,28 +189,27 @@ body {
     padding-bottom: 10px;
 }
 
-#turn-indicator { 
-    margin: 0;
-    font-size: 1.5rem; 
-    text-transform: uppercase;
-    color: #f39c12;
-}
-
-/* BOTÓN INFO */
+/* Botones Superiores */
 .btn-info {
-    background: #3498db; color: white;
-    border: none; width: 30px; height: 30px;
-    border-radius: 50%; cursor: pointer;
-    font-weight: bold; font-size: 1.2rem;
+    background: #3498db; color: white; border: none; width: 30px; height: 30px;
+    border-radius: 50%; cursor: pointer; font-weight: bold; font-size: 1.2rem;
     display: flex; align-items: center; justify-content: center;
 }
-.btn-info:hover { background: #2980b9; }
+.btn-info.power-info { background: #2ecc71; } /* Botón verde */
+.btn-info:hover { filter: brightness(1.1); }
 
-/* MODAL DE REGLAS FLOTANTE */
+.btn-reset {
+    background: #c0392b; color: white; border: none; width: 30px; height: 30px;
+    border-radius: 50%; cursor: pointer; font-weight: bold;
+    display: flex; align-items: center; justify-content: center;
+}
+.btn-reset:hover { background: #e74c3c; }
+
+/* Modales Flotantes (Reglas y Poderes) */
 .rules-modal {
     position: absolute;
     top: 70px; right: 20px;
-    width: 220px;
+    width: 240px;
     background: rgba(0,0,0,0.95);
     border: 2px solid #f1c40f;
     border-radius: 10px;
@@ -176,17 +219,14 @@ body {
     font-size: 0.85rem;
     box-shadow: 0 10px 30px rgba(0,0,0,0.8);
 }
-.rules-modal h3 { color: #f1c40f; margin-top: 0; text-align: center; border-bottom: 1px solid #555; padding-bottom: 5px;}
-.rules-modal ul { padding-left: 20px; margin-bottom: 15px; color: #ddd; }
+.rules-modal ul { padding-left: 20px; color: #ddd; margin-top: 5px; }
 .rules-modal li { margin-bottom: 5px; }
-
 .btn-close-rules {
-    width: 100%; background: #c0392b; border: none; color: white;
-    padding: 8px; cursor: pointer; border-radius: 5px; font-weight: bold;
+    width: 100%; background: #555; border: none; color: white;
+    padding: 5px; cursor: pointer; margin-top: 10px; border-radius: 4px;
 }
-.btn-close-rules:hover { background: #a93226; }
 
-/* SLOT */
+/* Slot Machine */
 .slot-machine-container {
     cursor: pointer;
     background: rgba(0,0,0,0.2);
@@ -207,70 +247,61 @@ body {
     border: 2px solid #555;
 }
 
-/* DADO */
+/* Dado */
 .dice-area {
-    background: white;
-    color: #333;
-    padding: 10px;
-    border-radius: 10px;
-    margin-top: 20px;
+    background: white; color: #333; padding: 10px; border-radius: 10px; margin-top: 20px;
 }
-
 #dice-img { width: 80px; border-radius: 10px; }
 
-.rolling { animation: shake 0.5s infinite; }
-@keyframes shake {
-    0% { transform: translate(1px, 1px) rotate(0deg); }
-    50% { transform: translate(-1px, 2px) rotate(180deg); }
-    100% { transform: translate(1px, -1px) rotate(360deg); }
-}
-
+/* Texto Matemático (CORREGIDO VISUALMENTE) */
 .math-display {
-    font-size: 1.1rem;
+    font-size: 1rem;
     margin-top: 10px;
     font-weight: bold;
     color: #ecf0f1;
     background: rgba(255,255,255,0.1);
     padding: 10px;
     border-radius: 8px;
+    font-family: 'Courier New', monospace;
+    letter-spacing: 1px;
 }
 
-/* Debug */
-.debug-cell {
-    border: 1px solid rgba(255, 255, 0, 0.1);
-    font-size: 8px; color: yellow;
-    display: flex; justify-content: center; align-items: center;
+/* Selección de Identidad */
+.identity-box {
+    margin-top: 20px;
+    border-top: 1px solid rgba(255,255,255,0.1);
+    padding-top: 10px;
+}
+.identity-buttons { display: flex; justify-content: center; gap: 10px; }
+.btn-id {
+    background: #333; border: 2px solid #555; border-radius: 5px;
+    cursor: pointer; padding: 5px; font-size: 1.2rem;
+    transition: transform 0.2s;
+}
+.btn-id.active {
+    border-color: white; background: #555;
+    box-shadow: 0 0 10px rgba(255,255,255,0.5);
 }
 
-/* --- MODAL CHIKAWA (Salió 6) --- */
-.chikawa-overlay {
-    position: fixed;
-    top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0,0,0,0.8); /* Fondo oscuro */
-    z-index: 3000; /* Encima de todo */
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    animation: fadeIn 0.3s;
+/* =========================================
+   6. ANIMACIONES
+   ========================================= */
+.rolling { animation: shake 0.5s infinite; }
+
+@keyframes shake {
+    0% { transform: translate(1px, 1px) rotate(0deg); }
+    50% { transform: translate(-1px, 2px) rotate(180deg); }
+    100% { transform: translate(1px, -1px) rotate(360deg); }
 }
 
-.chikawa-content {
-    text-align: center;
-    color: white;
-    /* Efecto de explosión suave */
-    animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+@keyframes bounce {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.2); }
 }
 
-.chikawa-anim {
-    width: 250px;
-    filter: drop-shadow(0 0 20px gold);
-}
-
-.chikawa-content h2 {
-    font-size: 3rem;
-    color: #f1c40f;
-    margin: 10px 0;
-    text-shadow: 2px 2px 0 #000;
+@keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-5px); }
 }
 
 @keyframes popIn {
@@ -284,44 +315,7 @@ body {
     to { opacity: 1; }
 }
 
-
-/* BOTÓN REINICIAR */
-.btn-reset {
-    background: #c0392b; color: white;
-    border: none; width: 30px; height: 30px;
-    border-radius: 50%; cursor: pointer;
-    font-weight: bold; font-size: 1.2rem;
-    display: flex; align-items: center; justify-content: center;
-}
-.btn-reset:hover { background: #e74c3c; }
-
-/* CAJA DE IDENTIDAD */
-.identity-box {
-    margin-top: 20px;
-    border-top: 1px solid rgba(255,255,255,0.1);
-    padding-top: 10px;
-}
-
-.identity-buttons {
-    display: flex;
-    justify-content: center;
-    gap: 10px;
-}
-
-.btn-id {
-    background: #333;
-    border: 2px solid #555;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 1.2rem;
-    padding: 5px;
-    transition: transform 0.2s;
-}
-.btn-id:hover { transform: scale(1.1); }
-
-/* Feedback visual de quién soy */
-.btn-id.active {
-    border-color: white;
-    background: #555;
-    box-shadow: 0 0 10px rgba(255,255,255,0.5);
+@keyframes burn { 
+    from { opacity: 0.5; transform: scale(0.8); } 
+    to { opacity: 1; transform: scale(1.2); } 
 }
